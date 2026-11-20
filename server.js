@@ -1,10 +1,18 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 
 const PORT = process.env.PORT || 5001;
 const DATA_FILE = path.join(__dirname, 'data.json');
 const PUBLIC_DIR = path.join(__dirname, 'public');
+
+// Oturum jetonları (Token saklama)
+const activeSessions = new Set();
+
+// Rate limiting & Brute-force koruması
+const loginAttempts = new Map(); // IP -> { count, lockedUntil }
+const appointmentLimits = new Map(); // IP -> [timestamps]
 
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -19,6 +27,16 @@ const MIME_TYPES = {
   '.ico': 'image/x-icon',
   '.webp': 'image/webp'
 };
+
+function sanitize(str) {
+  if (typeof str !== 'string') return '';
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
 
 function loadData() {
   try {
@@ -44,46 +62,100 @@ function saveData(data) {
 function readJsonBody(req) {
   return new Promise((resolve, reject) => {
     let body = '';
-    req.on('data', chunk => { body += chunk; if (body.length > 1e6) { req.destroy(); reject(new Error('Payload too large')); } });
-    req.on('end', () => { try { resolve(body ? JSON.parse(body) : {}); } catch (e) { reject(e); } });
+    req.on('data', chunk => {
+      body += chunk;
+      if (body.length > 5e5) { // 500KB limit
+        req.destroy();
+        reject(new Error('Payload too large'));
+      }
+    });
+    req.on('end', () => {
+      try {
+        resolve(body ? JSON.parse(body) : {});
+      } catch (e) {
+        reject(e);
+      }
+    });
     req.on('error', reject);
   });
+}
+
+// Token doğrulama yardımcısı
+function checkAdminAuth(req) {
+  const authHeader = req.headers['authorization'];
+  if (!authHeader) return false;
+  const token = authHeader.replace('Bearer ', '').trim();
+  return activeSessions.has(token);
 }
 
 const server = http.createServer(async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
 
   const parsedUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   const pathname = parsedUrl.pathname;
+  const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
 
   // ==============================
-  // GET /api/data
+  // GET /api/data (Herkes görebilir ama şifreli PIN gizlenir)
   // ==============================
   if (pathname === '/api/data' && req.method === 'GET') {
+    const data = loadData();
+    // Güvenlik: PIN kodunu müşteriye gönderme!
+    const safeData = JSON.parse(JSON.stringify(data));
+    if (safeData.shop) {
+      delete safeData.shop.pin;
+    }
     res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify(loadData()));
+    res.end(JSON.stringify(safeData));
     return;
   }
 
   // ==============================
-  // POST /api/login
+  // POST /api/login (Brute-Force Korumalı)
   // ==============================
   if (pathname === '/api/login' && req.method === 'POST') {
+    const now = Date.now();
+    const attempt = loginAttempts.get(clientIp) || { count: 0, lockedUntil: 0 };
+
+    if (attempt.lockedUntil > now) {
+      const waitMinutes = Math.ceil((attempt.lockedUntil - now) / 60000);
+      res.writeHead(429, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: `Çok fazla hatalı deneme! Lütfen ${waitMinutes} dakika bekleyin.` }));
+      return;
+    }
+
     try {
       const body = await readJsonBody(req);
       const data = loadData();
-      const pin = (data.shop && data.shop.pin) ? data.shop.pin : '1234';
+      const pin = (data.shop && data.shop.pin) ? data.shop.pin : '0000';
+
       if (String(body.pin).trim() === String(pin).trim()) {
+        loginAttempts.delete(clientIp);
+        // Güvenli rastgele token üret
+        const token = crypto.randomBytes(32).toString('hex');
+        activeSessions.add(token);
+
         res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ success: true }));
+        res.end(JSON.stringify({ success: true, token }));
       } else {
+        attempt.count += 1;
+        if (attempt.count >= 5) {
+          attempt.lockedUntil = now + 15 * 60 * 1000; // 15 dakika kilitle
+        }
+        loginAttempts.set(clientIp, attempt);
+
         res.writeHead(401, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ success: false, error: 'Hatalı PIN' }));
+        res.end(JSON.stringify({
+          success: false,
+          error: attempt.count >= 5 ? '5 kez hatalı girdiniz, 15 dakika kilitlendi!' : `Hatalı PIN! (${5 - attempt.count} hakkınız kaldı)`
+        }));
       }
-    } catch (e) { res.writeHead(400); res.end(JSON.stringify({ error: 'Geçersiz istek' })); }
+    } catch (e) {
+      res.writeHead(400); res.end(JSON.stringify({ error: 'Geçersiz istek' }));
+    }
     return;
   }
 
@@ -111,9 +183,20 @@ const server = http.createServer(async (req, res) => {
   }
 
   // ==============================
-  // POST /api/appointments
+  // POST /api/appointments (Spam / Rate Limit Korumalı)
   // ==============================
   if (pathname === '/api/appointments' && req.method === 'POST') {
+    const now = Date.now();
+    let timestamps = appointmentLimits.get(clientIp) || [];
+    timestamps = timestamps.filter(t => now - t < 60000); // son 1 dakika
+    if (timestamps.length >= 5) {
+      res.writeHead(429, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Çok hızlı işlem yapıyorsunuz. Lütfen biraz bekleyin.' }));
+      return;
+    }
+    timestamps.push(now);
+    appointmentLimits.set(clientIp, timestamps);
+
     try {
       const body = await readJsonBody(req);
       const { customerName, customerPhone, customerNote, serviceIds, barberId, date, time } = body;
@@ -138,11 +221,12 @@ const server = http.createServer(async (req, res) => {
       const totalDuration = selectedServices.reduce((s, x) => s + (Number(x.duration) || 0), 0);
       const selectedBarber = (data.barbers || []).find(b => b.id === barberId) || { id: 'any', name: 'Farketmez' };
 
+      // XSS temizliği
       const app = {
         id: 'RND-' + Math.floor(1000 + Math.random() * 9000),
-        customerName: customerName.trim(),
-        customerPhone: customerPhone.trim(),
-        customerNote: (customerNote || '').trim(),
+        customerName: sanitize(customerName.trim()).substring(0, 50),
+        customerPhone: sanitize(customerPhone.trim()).substring(0, 20),
+        customerNote: sanitize((customerNote || '').trim()).substring(0, 200),
         serviceIds,
         services: selectedServices.map(s => ({ id: s.id, name: s.name, price: s.price, duration: s.duration })),
         barberId,
@@ -159,10 +243,13 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // ==============================
+  // ==========================================
+  // AŞAĞIDAKİ TÜM ROTALAR YETKİLENDİRME (AUTH) İSTER
+  // ==========================================
+
   // PUT /api/appointments/:id
-  // ==============================
   if (pathname.startsWith('/api/appointments/') && !pathname.includes('/history/') && req.method === 'PUT') {
+    if (!checkAdminAuth(req)) { res.writeHead(401); res.end(JSON.stringify({ error: 'Yetkisiz erişim' })); return; }
     const id = pathname.replace('/api/appointments/', '');
     try {
       const body = await readJsonBody(req);
@@ -177,10 +264,9 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // ==============================
   // DELETE /api/appointments/:id
-  // ==============================
   if (pathname.startsWith('/api/appointments/') && !pathname.includes('/history/') && req.method === 'DELETE') {
+    if (!checkAdminAuth(req)) { res.writeHead(401); res.end(JSON.stringify({ error: 'Yetkisiz erişim' })); return; }
     const id = pathname.replace('/api/appointments/', '');
     const data = loadData();
     data.appointments = (data.appointments || []).filter(a => a.id !== id);
@@ -190,10 +276,9 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // ==============================
-  // POST /api/shop
-  // ==============================
+  // POST /api/shop (Ayarları Değiştirme)
   if (pathname === '/api/shop' && req.method === 'POST') {
+    if (!checkAdminAuth(req)) { res.writeHead(401); res.end(JSON.stringify({ error: 'Yetkisiz erişim' })); return; }
     try {
       const body = await readJsonBody(req);
       const data = loadData();
@@ -205,10 +290,9 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // ==============================
   // POST /api/holidays
-  // ==============================
   if (pathname === '/api/holidays' && req.method === 'POST') {
+    if (!checkAdminAuth(req)) { res.writeHead(401); res.end(JSON.stringify({ error: 'Yetkisiz erişim' })); return; }
     try {
       const { date } = await readJsonBody(req);
       if (!date) { res.writeHead(400); res.end(JSON.stringify({ error: 'Tarih gerekli' })); return; }
@@ -222,10 +306,9 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // ==============================
   // DELETE /api/holidays/:date
-  // ==============================
   if (pathname.startsWith('/api/holidays/') && req.method === 'DELETE') {
+    if (!checkAdminAuth(req)) { res.writeHead(401); res.end(JSON.stringify({ error: 'Yetkisiz erişim' })); return; }
     const date = decodeURIComponent(pathname.replace('/api/holidays/', ''));
     const data = loadData();
     data.shop.holidays = (data.shop.holidays || []).filter(h => h !== date);
@@ -235,19 +318,17 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // ==============================
   // GET /api/reminders
-  // ==============================
   if (pathname === '/api/reminders' && req.method === 'GET') {
+    if (!checkAdminAuth(req)) { res.writeHead(401); res.end(JSON.stringify({ error: 'Yetkisiz erişim' })); return; }
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify(loadData().reminders || []));
     return;
   }
 
-  // ==============================
   // POST /api/reminders/clear
-  // ==============================
   if (pathname === '/api/reminders/clear' && req.method === 'POST') {
+    if (!checkAdminAuth(req)) { res.writeHead(401); res.end(JSON.stringify({ error: 'Yetkisiz erişim' })); return; }
     try {
       const { id } = await readJsonBody(req);
       const data = loadData();
@@ -259,10 +340,9 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // ==============================
   // POST /api/services
-  // ==============================
   if (pathname === '/api/services' && req.method === 'POST') {
+    if (!checkAdminAuth(req)) { res.writeHead(401); res.end(JSON.stringify({ error: 'Yetkisiz erişim' })); return; }
     try {
       const service = await readJsonBody(req);
       const data = loadData();
@@ -283,10 +363,9 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // ==============================
   // DELETE /api/services/:id
-  // ==============================
   if (pathname.startsWith('/api/services/') && req.method === 'DELETE') {
+    if (!checkAdminAuth(req)) { res.writeHead(401); res.end(JSON.stringify({ error: 'Yetkisiz erişim' })); return; }
     const id = pathname.replace('/api/services/', '');
     const data = loadData();
     data.services = (data.services || []).filter(s => s.id !== id);
@@ -296,10 +375,9 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // ==============================
   // POST /api/barbers
-  // ==============================
   if (pathname === '/api/barbers' && req.method === 'POST') {
+    if (!checkAdminAuth(req)) { res.writeHead(401); res.end(JSON.stringify({ error: 'Yetkisiz erişim' })); return; }
     try {
       const barber = await readJsonBody(req);
       const data = loadData();
@@ -323,10 +401,9 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // ==============================
-  // DELETE /api/barbers/:id  (portfolio değilse)
-  // ==============================
+  // DELETE /api/barbers/:id
   if (pathname.startsWith('/api/barbers/') && !pathname.includes('/portfolio') && req.method === 'DELETE') {
+    if (!checkAdminAuth(req)) { res.writeHead(401); res.end(JSON.stringify({ error: 'Yetkisiz erişim' })); return; }
     const id = pathname.replace('/api/barbers/', '');
     if (id === 'any') { res.writeHead(400); res.end(JSON.stringify({ error: 'Silinemez' })); return; }
     const data = loadData();
@@ -337,10 +414,9 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // ==============================
-  // POST /api/barbers/:id/portfolio  (fotoğraf ekle)
-  // ==============================
+  // POST /api/barbers/:id/portfolio
   if (pathname.includes('/portfolio') && req.method === 'POST') {
+    if (!checkAdminAuth(req)) { res.writeHead(401); res.end(JSON.stringify({ error: 'Yetkisiz erişim' })); return; }
     const barberId = pathname.split('/')[3];
     try {
       const { url } = await readJsonBody(req);
@@ -356,10 +432,9 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // ==============================
-  // DELETE /api/barbers/:id/portfolio  (fotoğraf sil)
-  // ==============================
+  // DELETE /api/barbers/:id/portfolio
   if (pathname.includes('/portfolio') && req.method === 'DELETE') {
+    if (!checkAdminAuth(req)) { res.writeHead(401); res.end(JSON.stringify({ error: 'Yetkisiz erişim' })); return; }
     const barberId = pathname.split('/')[3];
     try {
       const { url } = await readJsonBody(req);
@@ -393,9 +468,6 @@ const server = http.createServer(async (req, res) => {
   });
 });
 
-// ==============================
-// SUNUCUYU BAŞLAT
-// ==============================
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`===============================================`);
   console.log(`💈 Berber & Kuaför Randevu Sistemi Hazır!`);
@@ -404,9 +476,7 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log(`===============================================`);
 });
 
-// ==============================
-// RANDEVU HATIRLATMA SCHEDULER (her 60sn)
-// ==============================
+// Hatırlatma kontrolü
 setInterval(() => {
   try {
     const data = loadData();

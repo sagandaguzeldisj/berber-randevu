@@ -40,6 +40,14 @@ function showToast(msg) {
   setTimeout(() => toastEl.classList.remove('show'), 3000);
 }
 
+function getAdminHeaders() {
+  const token = sessionStorage.getItem('berber_admin_token') || '';
+  return {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`
+  };
+}
+
 // --- PIN GİRİŞİ ---
 btnLogin.addEventListener('click', async () => {
   const pin = inputPin.value.trim();
@@ -49,11 +57,13 @@ btnLogin.addEventListener('click', async () => {
       body: JSON.stringify({ pin })
     });
     const result = await res.json();
-    if (result.success) {
+    if (result.success && result.token) {
       sessionStorage.setItem('berber_admin_logged', 'true');
+      sessionStorage.setItem('berber_admin_token', result.token);
       pinOverlay.style.display = 'none';
       loadAdminData();
     } else {
+      pinError.textContent = result.error || 'Hatalı PIN';
       pinError.style.display = 'block';
     }
   } catch (e) {
@@ -116,7 +126,7 @@ toggleOpenBtn.addEventListener('click', async () => {
   const newStatus = !(adminData.shop.isOpen !== false);
   try {
     const res = await fetch('/api/shop', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: getAdminHeaders(),
       body: JSON.stringify({ isOpen: newStatus })
     });
     if (res.ok) { adminData.shop.isOpen = newStatus; renderHeader(); showToast(newStatus ? 'Dükkan Açıldı' : 'Dükkan Kapatıldı'); }
@@ -198,7 +208,7 @@ function renderAppointments() {
 window.updateStatus = async function(id, status) {
   try {
     const res = await fetch(`/api/appointments/${id}`, {
-      method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      method: 'PUT', headers: getAdminHeaders(),
       body: JSON.stringify({ status })
     });
     if (res.ok) { showToast(`Durum: ${status}`); loadAdminData(); }
@@ -208,7 +218,7 @@ window.updateStatus = async function(id, status) {
 window.deleteAppointment = async function(id) {
   if (!confirm('Bu randevuyu silmek istiyor musunuz?')) return;
   try {
-    const res = await fetch(`/api/appointments/${id}`, { method: 'DELETE' });
+    const res = await fetch(`/api/appointments/${id}`, { method: 'DELETE', headers: getAdminHeaders() });
     if (res.ok) { showToast('Silindi.'); loadAdminData(); }
   } catch (e) { showToast('Hata'); }
 };
@@ -259,7 +269,7 @@ function renderReminders() {
 window.clearReminder = async function(id) {
   try {
     const res = await fetch('/api/reminders/clear', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: getAdminHeaders(),
       body: JSON.stringify({ id })
     });
     if (res.ok) { showToast('Hatırlatma kaldırıldı.'); loadAdminData(); }
@@ -270,7 +280,7 @@ window.clearReminder = async function(id) {
 setInterval(async () => {
   if (sessionStorage.getItem('berber_admin_logged') !== 'true') return;
   try {
-    const res = await fetch('/api/reminders');
+    const res = await fetch('/api/reminders', { headers: getAdminHeaders() });
     if (res.ok) {
       const rems = await res.json();
       const cnt = rems.filter(r => r.status === 'pending').length;
@@ -327,7 +337,7 @@ document.getElementById('serviceForm').addEventListener('submit', async e => {
     description: document.getElementById('srvDesc').value.trim()
   };
   try {
-    const res = await fetch('/api/services', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    const res = await fetch('/api/services', { method: 'POST', headers: getAdminHeaders(), body: JSON.stringify(payload) });
     if (res.ok) { document.getElementById('serviceModal').classList.remove('active'); showToast('Hizmet kaydedildi.'); loadAdminData(); }
   } catch (e) { showToast('Hata'); }
 });
@@ -348,7 +358,7 @@ window.editService = function(id) {
 window.deleteService = async function(id) {
   if (!confirm('Bu hizmeti silmek istiyor musunuz?')) return;
   try {
-    const res = await fetch(`/api/services/${id}`, { method: 'DELETE' });
+    const res = await fetch(`/api/services/${id}`, { method: 'DELETE', headers: getAdminHeaders() });
     if (res.ok) { showToast('Hizmet silindi.'); loadAdminData(); }
   } catch (e) { showToast('Hata'); }
 };
@@ -401,7 +411,7 @@ document.getElementById('barberForm').addEventListener('submit', async e => {
     }
   };
   try {
-    const res = await fetch('/api/barbers', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    const res = await fetch('/api/barbers', { method: 'POST', headers: getAdminHeaders(), body: JSON.stringify(payload) });
     if (res.ok) { document.getElementById('barberModal').classList.remove('active'); showToast('Personel eklendi.'); loadAdminData(); }
   } catch (e) { showToast('Hata'); }
 });
@@ -409,7 +419,7 @@ document.getElementById('barberForm').addEventListener('submit', async e => {
 window.deleteBarber = async function(id) {
   if (!confirm('Bu personeli silmek istiyor musunuz?')) return;
   try {
-    const res = await fetch(`/api/barbers/${id}`, { method: 'DELETE' });
+    const res = await fetch(`/api/barbers/${id}`, { method: 'DELETE', headers: getAdminHeaders() });
     if (res.ok) { showToast('Personel silindi.'); loadAdminData(); }
   } catch (e) { showToast('Hata'); }
 };
@@ -442,7 +452,7 @@ window.addHoliday = async function() {
   const dateVal = document.getElementById('holidayDateInput').value;
   if (!dateVal) { showToast('Lütfen tarih seçiniz.'); return; }
   try {
-    const res = await fetch('/api/holidays', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ date: dateVal }) });
+    const res = await fetch('/api/holidays', { method: 'POST', headers: getAdminHeaders(), body: JSON.stringify({ date: dateVal }) });
     if (res.ok) { showToast('Kapalı gün eklendi.'); loadAdminData(); }
   } catch (e) { showToast('Hata'); }
 };
@@ -450,7 +460,7 @@ window.addHoliday = async function() {
 window.removeHoliday = async function(date) {
   if (!confirm(`${date} tarihini kapalı günlerden çıkarmak istiyor musunuz?`)) return;
   try {
-    const res = await fetch(`/api/holidays/${date}`, { method: 'DELETE' });
+    const res = await fetch(`/api/holidays/${date}`, { method: 'DELETE', headers: getAdminHeaders() });
     if (res.ok) { showToast('Kapalı gün kaldırıldı.'); loadAdminData(); }
   } catch (e) { showToast('Hata'); }
 };
@@ -507,7 +517,7 @@ window.addPortfolioPhoto = async function() {
   if (!url) { showToast('Lütfen fotoğraf URL giriniz.'); return; }
   try {
     const res = await fetch(`/api/barbers/${sel.value}/portfolio`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url })
+      method: 'POST', headers: getAdminHeaders(), body: JSON.stringify({ url })
     });
     if (res.ok) { urlInput.value = ''; showToast('Fotoğraf eklendi!'); loadAdminData(); }
   } catch (e) { showToast('Hata'); }
@@ -516,7 +526,7 @@ window.addPortfolioPhoto = async function() {
 window.removePortfolioPhoto = async function(barberId, url) {
   try {
     const res = await fetch(`/api/barbers/${barberId}/portfolio`, {
-      method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url })
+      method: 'DELETE', headers: getAdminHeaders(), body: JSON.stringify({ url })
     });
     if (res.ok) { showToast('Fotoğraf kaldırıldı.'); loadAdminData(); }
   } catch (e) { showToast('Hata'); }
@@ -556,7 +566,7 @@ document.getElementById('settingsForm').addEventListener('submit', async e => {
     pin: document.getElementById('settingPin').value.trim() || '0000'
   };
   try {
-    const res = await fetch('/api/shop', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    const res = await fetch('/api/shop', { method: 'POST', headers: getAdminHeaders(), body: JSON.stringify(payload) });
     if (res.ok) { showToast('Ayarlar kaydedildi!'); loadAdminData(); }
   } catch (e) { showToast('Hata'); }
 });
