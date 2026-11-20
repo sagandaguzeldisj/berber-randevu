@@ -1,0 +1,337 @@
+{
+  "shop": {
+    "name": "Gold Makas Erkek Kuaförü",
+    "slogan": "Geleneksel Ustalık & Modern Çizgiler",
+    "phone": "905011550917",
+    "address": "Bağdat Caddesi No:114/B, Kadıköy / İstanbul",
+    "instagram": "@goldmakas",
+    "logo": "https://cdn-icons-png.flaticon.com/512/2822/2822452.png",
+    "coverImage": "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=1200&q=80",
+    "openingTime": "09:00",
+    "closingTime": "21:00",
+    "slotDuration": 30,
+    "closedDays": [
+      0
+    ],
+    "holidays": [
+      "2026-12-25",
+      "2026-01-01",
+      "2026-04-23",
+      "2026-08-30",
+      "2026-10-29",
+      "2026-11-19"
+    ],
+    "websiteUrl": "http://localhost:5001",
+    "isOpen": true,
+    "pin": "0000"
+  },
+  "services": [
+    {
+      "id": "1",
+      "name": "Saç Kesimi & Yıkama",
+      "price": 300,
+      "duration": 30,
+      "description": "Kişiye özel saç tasarımı, yıkama ve fön ile stil verme.",
+      "icon": "✂️",
+      "isAvailable": true
+    },
+    {
+      "id": "2",
+      "name": "Sakal Tıraşı & Sıcak Havlu",
+      "price": 180,
+      "duration": 20,
+      "description": "Geleneksel ustura tıraşı, buharlı sıcak havlu ve özel sakal yağı.",
+      "icon": "🪒",
+      "isAvailable": true
+    },
+    {
+      "id": "3",
+      "name": "Saç & Sakal Kombo",
+      "price": 450,
+      "duration": 45,
+      "description": "Eksiksiz bakım! Saç kesimi, sakal tıraşı, yıkama ve sıcak havlu.",
+      "icon": "💈",
+      "isAvailable": true
+    },
+    {
+      "id": "4",
+      "name": "Çocuk Saç Kesimi",
+      "price": 250,
+      "duration": 30,
+      "description": "Sabırlı ve neşeli yaklaşımla 12 yaş altı çocuklar için özel kesim.",
+      "icon": "👦",
+      "isAvailable": true
+    },
+    {
+      "id": "5",
+      "name": "Cilt Bakımı & Kil Maskesi",
+      "price": 200,
+      "duration": 25,
+      "description": "Buhar terapisi, siyah nokta temizliği ve canlandırıcı kil maskesi.",
+      "icon": "🧖‍♂️",
+      "isAvailable": true
+    },
+    {
+      "id": "6",
+      "name": "Saç Boyama & Gri Kamuflaj",
+      "price": 400,
+      "duration": 40,
+      "description": "Doğal tonlarda beyaz kapatma veya saç renklendirme.",
+      "icon": "🎨",
+      "isAvailable": true
+    },
+    {
+      "id": "7",
+      "name": "VIP Damat Tıraşı Paketi",
+      "price": 1500,
+      "duration": 90,
+      "description": "Özel gününüz için A'dan Z'ye saç, sakal, cilt bakımı, ağda ve masaj.",
+      "icon": "👑",
+      "isAvailable": true
+    }
+  ],
+  "barbers": [
+    {
+      "id": "any",
+      "name": "Farketmez / İlk Müsait Usta",
+      "title": "En Hızlı Seçenek",
+      "avatar": "https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
+      "isAvailable": true,
+      "workingDays": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "workingHours": {
+        "open": "09:00",
+        "close": "21:00"
+      },
+      "portfolio": []
+    },
+    {
+      "id": "b1",
+      "name": "Ahmet Usta",
+      "title": "Baş Berber & Sakal Uzmanı",
+      "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80",
+      "isAvailable": true,
+      "workingDays": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "workingHours": {
+        "open": "09:00",
+        "close": "21:00"
+      },
+      "portfolio": [
+        "https://images.unsplash.com/photo-1599351431202-1e0f0137899a?auto=format&fit=crop&w=600&q=80",
+        "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=600&q=80",
+        "https://images.unsplash.com/photo-1621605815971-fbc98d665033?auto=format&fit=crop&w=600&q=80",
+        "https://images.unsplash.com/photo-1560707303-4e980ce876ad?auto=format&fit=crop&w=600&q=80",
+        "https://images.unsplash.com/photo-1587909209111-5097c79f7bd3?auto=format&fit=crop&w=600&q=80"
+      ]
+    },
+    {
+      "id": "b2",
+      "name": "Murat Usta",
+      "title": "Modern Kesim & Stil Danışmanı",
+      "avatar": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80",
+      "isAvailable": true,
+      "workingDays": [
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "workingHours": {
+        "open": "10:00",
+        "close": "20:00"
+      },
+      "portfolio": [
+        "https://images.unsplash.com/photo-1605497788044-5a32c7078486?auto=format&fit=crop&w=600&q=80",
+        "https://images.unsplash.com/photo-1622288432450-277d0fef5ed6?auto=format&fit=crop&w=600&q=80",
+        "https://images.unsplash.com/photo-1534297635766-a262cdcb8ee4?auto=format&fit=crop&w=600&q=80",
+        "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=600&q=80",
+        "https://images.unsplash.com/photo-1593702288056-7cc5c236d4d5?auto=format&fit=crop&w=600&q=80"
+      ]
+    },
+    {
+      "id": "b3",
+      "name": "Can Kalfa",
+      "title": "Hızlı Kesim & Yıkama",
+      "avatar": "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&w=200&q=80",
+      "isAvailable": true,
+      "workingDays": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "workingHours": {
+        "open": "09:00",
+        "close": "18:00"
+      },
+      "portfolio": [
+        "https://images.unsplash.com/photo-1559058789-672da4d6e7a4?auto=format&fit=crop&w=600&q=80",
+        "https://images.unsplash.com/photo-1595152772835-219674b2a163?auto=format&fit=crop&w=600&q=80",
+        "https://images.unsplash.com/photo-1587909209111-5097c79f7bd3?auto=format&fit=crop&w=600&q=80",
+        "https://images.unsplash.com/photo-1621605815971-fbc98d665033?auto=format&fit=crop&w=600&q=80",
+        "https://images.unsplash.com/photo-1560707303-4e980ce876ad?auto=format&fit=crop&w=600&q=80"
+      ]
+    }
+  ],
+  "appointments": [
+    {
+      "id": "RND-9754",
+      "customerName": "ömer karabulut",
+      "customerPhone": "5005050505050505",
+      "customerNote": "",
+      "serviceIds": [
+        "2"
+      ],
+      "services": [
+        {
+          "id": "2",
+          "name": "Sakal Tıraşı & Sıcak Havlu",
+          "price": 180,
+          "duration": 20
+        }
+      ],
+      "barberId": "b2",
+      "barberName": "Murat Usta",
+      "date": "2026-11-24",
+      "time": "10:30",
+      "totalPrice": 180,
+      "totalDuration": 20,
+      "status": "beklemede",
+      "createdAt": "2026-11-20T09:53:08.658Z"
+    },
+    {
+      "id": "RND-3372",
+      "customerName": "ömer karabulut",
+      "customerPhone": "5005050505050505",
+      "customerNote": "",
+      "serviceIds": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7"
+      ],
+      "services": [
+        {
+          "id": "1",
+          "name": "Saç Kesimi & Yıkama",
+          "price": 300,
+          "duration": 30
+        },
+        {
+          "id": "2",
+          "name": "Sakal Tıraşı & Sıcak Havlu",
+          "price": 180,
+          "duration": 20
+        },
+        {
+          "id": "3",
+          "name": "Saç & Sakal Kombo",
+          "price": 450,
+          "duration": 45
+        },
+        {
+          "id": "4",
+          "name": "Çocuk Saç Kesimi",
+          "price": 250,
+          "duration": 30
+        },
+        {
+          "id": "5",
+          "name": "Cilt Bakımı & Kil Maskesi",
+          "price": 200,
+          "duration": 25
+        },
+        {
+          "id": "6",
+          "name": "Saç Boyama & Gri Kamuflaj",
+          "price": 400,
+          "duration": 40
+        },
+        {
+          "id": "7",
+          "name": "VIP Damat Tıraşı Paketi",
+          "price": 1500,
+          "duration": 90
+        }
+      ],
+      "barberId": "any",
+      "barberName": "Farketmez / İlk Müsait Usta",
+      "date": "2026-11-23",
+      "time": "14:30",
+      "totalPrice": 3280,
+      "totalDuration": 280,
+      "status": "beklemede",
+      "createdAt": "2026-11-20T09:46:52.447Z"
+    },
+    {
+      "id": "RND-1467",
+      "customerName": "ömer karabulut",
+      "customerPhone": "5005050505050505",
+      "customerNote": "",
+      "serviceIds": [
+        "1"
+      ],
+      "services": [
+        {
+          "id": "1",
+          "name": "Saç Kesimi & Yıkama",
+          "price": 300,
+          "duration": 30
+        }
+      ],
+      "barberId": "b1",
+      "barberName": "Ahmet Usta",
+      "date": "2026-11-21",
+      "time": "15:00",
+      "totalPrice": 300,
+      "totalDuration": 30,
+      "status": "tamamlandi",
+      "createdAt": "2026-11-20T08:11:07.912Z"
+    },
+    {
+      "id": "RND-4659",
+      "customerName": "ömer karabulut",
+      "customerPhone": "5005050505050505",
+      "customerNote": "bos",
+      "serviceIds": [
+        "1"
+      ],
+      "services": [
+        {
+          "id": "1",
+          "name": "Saç Kesimi & Yıkama",
+          "price": 300,
+          "duration": 30
+        }
+      ],
+      "barberId": "b1",
+      "barberName": "Ahmet Usta",
+      "date": "2026-11-20",
+      "time": "11:30",
+      "totalPrice": 300,
+      "totalDuration": 30,
+      "status": "tamamlandi",
+      "createdAt": "2026-11-20T08:05:55.807Z"
+    }
+  ],
+  "reminders": []
+}

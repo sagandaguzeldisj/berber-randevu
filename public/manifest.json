@@ -1,0 +1,21 @@
+{
+  "name": "Gold Makas Randevu",
+  "short_name": "GoldMakas",
+  "description": "Erkek Kuaförü Kolay WhatsApp Randevu Sistemi",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#d97706",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2822/2822452.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2822/2822452.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

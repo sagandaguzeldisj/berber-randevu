@@ -1,0 +1,12 @@
+{
+  "name": "berber-randevu",
+  "version": "1.0.0",
+  "description": "Berber ve Kuaförler için WhatsApp Entegrasyonlu Mobil Randevu Sistemi",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": ["berber", "kuafor", "randevu", "whatsapp", "pwa", "esnaf"],
+  "author": "Antigravity",
+  "license": "ISC"
+}
