@@ -1,40 +1,77 @@
+/* ======================================================== */
+/* 💈 GOLD MAKAS • ATELIER DE BARBIER (LUXURY BESPOKE DESIGN) */
+/* ======================================================== */
+
 :root {
-  --bg-main: #0b0f17;
-  --bg-card: #151d2a;
-  --bg-card-hover: #1c2738;
-  --bg-input: #0e141f;
-  --border-color: #243044;
-  --border-active: #f59e0b;
+  --bg-deep: #06080c;
+  --bg-main: #0a0d14;
+  --bg-card: #111622;
+  --bg-card-hover: #161e2e;
+  --bg-input: #0c1018;
+  
+  --gold-primary: #dfb15b;
+  --gold-light: #f5d78e;
+  --gold-dark: #b88d3b;
+  --gold-glow: rgba(223, 177, 91, 0.22);
+  --gold-border: rgba(223, 177, 91, 0.25);
+  
+  --border-subtle: #1e2638;
+  --border-hover: rgba(223, 177, 91, 0.5);
+  
   --text-primary: #f8fafc;
   --text-secondary: #94a3b8;
   --text-muted: #64748b;
-  --gold: #f59e0b;
-  --gold-glow: rgba(245, 158, 11, 0.25);
-  --green: #10b981;
-  --green-glow: rgba(16, 185, 129, 0.2);
+  
+  --green-wa: #25d366;
+  --green-wa-hover: #20ba5a;
+  --green-glow: rgba(37, 211, 102, 0.25);
   --red: #ef4444;
   --blue: #3b82f6;
+  
   --radius-sm: 8px;
   --radius-md: 14px;
   --radius-lg: 20px;
-  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.35);
+  --radius-xl: 28px;
+  
+  --font-serif: 'Cinzel', Georgia, serif;
+  --font-sans: 'Plus Jakarta Sans', -apple-system, sans-serif;
 }
 
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: var(--font-sans);
   -webkit-tap-highlight-color: transparent;
 }
 
 body {
-  background-color: var(--bg-main);
+  background-color: var(--bg-deep);
   color: var(--text-primary);
   min-height: 100vh;
   display: flex;
   justify-content: center;
   padding-bottom: 90px;
+  background-image: 
+    radial-gradient(circle at 50% 0%, rgba(223, 177, 91, 0.08) 0%, transparent 60%),
+    radial-gradient(circle at 100% 50%, rgba(21, 31, 50, 0.5) 0%, transparent 50%);
+  background-attachment: fixed;
+}
+
+/* Üst Berber Şerit Çubuğu (Vintage Berber Direği Esintisi) */
+.luxury-barber-ribbon {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg, 
+    #c53030 0%, #c53030 25%, 
+    #ffffff 25%, #ffffff 50%, 
+    #2b6cb0 50%, #2b6cb0 75%, 
+    var(--gold-primary) 75%, var(--gold-primary) 100%);
+  background-size: 80px 100%;
+  z-index: 999;
 }
 
 .app-container {
@@ -42,248 +79,403 @@ body {
   max-width: 540px;
   min-height: 100vh;
   position: relative;
-  background-color: var(--bg-main);
 }
 
-/* Header & Banner */
+/* ======================================================== */
+/* 👑 SALON HEROBANNER & BAŞLIK (VINTAGE PRESTIGE) */
+/* ======================================================== */
+
 .shop-hero {
   position: relative;
   width: 100%;
-  height: 160px;
+  height: 180px;
   background-size: cover;
   background-position: center;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .shop-hero::after {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(11,15,23,0.3) 0%, rgba(11,15,23,0.95) 100%);
+  background: linear-gradient(180deg, rgba(6, 8, 12, 0.2) 0%, rgba(6, 8, 12, 0.95) 100%);
+}
+
+.hero-vintage-badge {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  font-family: var(--font-serif);
+  font-size: 10px;
+  letter-spacing: 2px;
+  padding: 4px 10px;
+  background: rgba(6, 8, 12, 0.85);
+  border: 1px solid var(--gold-border);
+  color: var(--gold-primary);
+  border-radius: 4px;
+  z-index: 2;
+  font-weight: 700;
 }
 
 .shop-header {
   position: relative;
-  margin-top: -50px;
-  padding: 0 16px 16px 16px;
+  margin-top: -55px;
+  padding: 0 16px 20px 16px;
   z-index: 2;
 }
 
 .shop-profile {
   display: flex;
   align-items: center;
-  gap: 14px;
-  margin-bottom: 12px;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.logo-wrapper {
+  position: relative;
+  width: 76px;
+  height: 76px;
+  flex-shrink: 0;
 }
 
 .shop-logo {
-  width: 72px;
-  height: 72px;
+  width: 100%;
+  height: 100%;
   border-radius: 50%;
-  border: 3px solid var(--gold);
-  background-color: var(--bg-card);
+  background: var(--bg-card);
   object-fit: cover;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  border: 2px solid var(--gold-primary);
+}
+
+.logo-gold-ring {
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 1px dashed rgba(223, 177, 91, 0.4);
+  pointer-events: none;
+}
+
+.salon-pre-title {
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--gold-primary);
+  font-weight: 800;
+  text-transform: uppercase;
+  margin-bottom: 2px;
 }
 
 .shop-title h1 {
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--text-primary);
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #fff;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 
 .shop-title p {
   font-size: 13px;
-  color: var(--gold);
+  color: var(--text-secondary);
+  font-style: italic;
   margin-top: 2px;
-  font-weight: 500;
 }
 
 .shop-meta {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 8px;
+  margin-top: 10px;
 }
 
 .badge {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   font-size: 11px;
   font-weight: 600;
-  padding: 4px 10px;
+  padding: 5px 12px;
   border-radius: 30px;
   background: var(--bg-card);
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border-subtle);
   color: var(--text-secondary);
 }
 
 .badge-open {
-  background: rgba(16, 185, 129, 0.15);
-  border-color: rgba(16, 185, 129, 0.4);
-  color: var(--green);
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.35);
+  color: #34d399;
 }
 
 .badge-closed {
-  background: rgba(239, 68, 68, 0.15);
-  border-color: rgba(239, 68, 68, 0.4);
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.35);
   color: var(--red);
+}
+
+.badge-vip {
+  background: rgba(223, 177, 91, 0.12);
+  border-color: var(--gold-border);
+  color: var(--gold-light);
+  font-weight: 700;
+}
+
+.badge-rating {
+  background: rgba(255, 255, 255, 0.05);
+  color: #fbbf24;
+}
+
+.badge-rating small {
+  color: var(--text-muted);
+}
+
+.badge-link {
+  text-decoration: none;
+  color: var(--text-secondary);
+  transition: all 0.2s;
+}
+
+.badge-link:hover {
+  border-color: var(--gold-primary);
+  color: var(--gold-light);
 }
 
 .shop-address {
   font-size: 12px;
   color: var(--text-secondary);
   margin-top: 10px;
-  display: flex;
-  align-items: center;
-  gap: 5px;
 }
 
-/* Steps & Section Titles */
+/* Lüks Avantajlar Barı */
+.luxury-perks-bar {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 16px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+
+.perk-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.perk-icon {
+  font-size: 20px;
+}
+
+.perk-item div {
+  display: flex;
+  flex-direction: column;
+}
+
+.perk-item strong {
+  font-size: 11px;
+  color: var(--text-primary);
+}
+
+.perk-item span {
+  font-size: 9px;
+  color: var(--text-muted);
+}
+
+/* ======================================================== */
+/* 📋 ADIMLAR VE BÖLÜM BAŞLIKLARI */
+/* ======================================================== */
+
 .section {
-  padding: 16px;
+  padding: 18px 16px;
 }
 
 .section-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
+  align-items: flex-end;
+  margin-bottom: 14px;
+}
+
+.step-tag {
+  display: inline-block;
+  font-family: var(--font-serif);
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--gold-primary);
+  font-weight: 800;
+  margin-bottom: 2px;
 }
 
 .section-title {
-  font-size: 16px;
+  font-family: var(--font-serif);
+  font-size: 17px;
   font-weight: 700;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--text-primary);
+  letter-spacing: 0.5px;
+  color: #fff;
 }
 
-.section-step {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: var(--gold);
-  color: #000;
+.section-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.selected-counter {
   font-size: 12px;
-  font-weight: 800;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  color: var(--gold-primary);
+  font-weight: 700;
+  background: rgba(223, 177, 91, 0.1);
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid var(--gold-border);
 }
 
-/* Service Cards (Grid) */
+/* ======================================================== */
+/* ✂️ ADIM 1: HİZMET VE BAKIM RİTÜEL KARTLARI */
+/* ======================================================== */
+
 .services-grid {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
 .service-card {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px;
+  padding: 16px;
   background: var(--bg-card);
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   user-select: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.service-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: transparent;
+  transition: background 0.2s;
 }
 
 .service-card:hover {
   background: var(--bg-card-hover);
-  border-color: #3b4d66;
+  border-color: rgba(223, 177, 91, 0.35);
 }
 
 .service-card.selected {
-  border-color: var(--gold);
-  background: rgba(245, 158, 11, 0.08);
-  box-shadow: 0 0 12px var(--gold-glow);
+  border-color: var(--gold-primary);
+  background: rgba(223, 177, 91, 0.08);
+  box-shadow: 0 4px 20px var(--gold-glow);
+}
+
+.service-card.selected::before {
+  background: var(--gold-primary);
 }
 
 .service-left {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   flex: 1;
 }
 
 .service-icon {
   font-size: 26px;
-  width: 44px;
-  height: 44px;
-  border-radius: var(--radius-sm);
-  background: rgba(255, 255, 255, 0.04);
+  width: 50px;
+  height: 50px;
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-subtle);
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+
+.service-card.selected .service-icon {
+  border-color: var(--gold-border);
+  background: rgba(223, 177, 91, 0.15);
 }
 
 .service-info h3 {
+  font-family: var(--font-serif);
   font-size: 15px;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 2px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 3px;
+  letter-spacing: 0.3px;
 }
 
 .service-info p {
   font-size: 12px;
   color: var(--text-secondary);
-  line-height: 1.3;
+  line-height: 1.4;
 }
 
 .service-meta {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-top: 4px;
+  margin-top: 6px;
   font-size: 11px;
-  color: var(--text-muted);
+  color: var(--gold-light);
+  font-weight: 600;
 }
 
 .service-right {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 6px;
-  margin-left: 10px;
+  gap: 8px;
+  margin-left: 12px;
 }
 
 .service-price {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--gold);
+  font-family: var(--font-serif);
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--gold-primary);
   white-space: nowrap;
 }
 
 .service-check {
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
-  border: 2px solid var(--border-color);
+  border: 2px solid var(--border-subtle);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  font-size: 13px;
   color: transparent;
-  transition: all 0.2s ease;
+  transition: all 0.2s;
 }
 
 .service-card.selected .service-check {
-  background: var(--gold);
-  border-color: var(--gold);
-  color: #000;
-  font-weight: bold;
+  background: var(--gold-primary);
+  border-color: var(--gold-primary);
+  color: #06080c;
+  font-weight: 900;
 }
 
-/* Barber Selector (Horizontal Scroll) */
+/* ======================================================== */
+/* 👨‍🦱 ADIM 2: USTA VE STİLİSTLER */
+/* ======================================================== */
+
 .barber-scroll {
   display: flex;
   gap: 12px;
@@ -297,14 +489,14 @@ body {
 }
 
 .barber-card {
-  flex: 0 0 110px;
+  flex: 0 0 115px;
   background: var(--bg-card);
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  padding: 12px 8px;
+  padding: 14px 8px;
   text-align: center;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s;
 }
 
 .barber-card:hover {
@@ -312,28 +504,29 @@ body {
 }
 
 .barber-card.selected {
-  border-color: var(--gold);
-  background: rgba(245, 158, 11, 0.08);
-  box-shadow: 0 0 10px var(--gold-glow);
+  border-color: var(--gold-primary);
+  background: rgba(223, 177, 91, 0.1);
+  box-shadow: 0 0 15px var(--gold-glow);
 }
 
 .barber-avatar {
-  width: 52px;
-  height: 52px;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
   margin: 0 auto 8px auto;
   object-fit: cover;
-  border: 2px solid var(--border-color);
+  border: 2px solid var(--border-subtle);
 }
 
 .barber-card.selected .barber-avatar {
-  border-color: var(--gold);
+  border-color: var(--gold-primary);
 }
 
 .barber-name {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-primary);
+  font-family: var(--font-serif);
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
   margin-bottom: 2px;
   white-space: nowrap;
   overflow: hidden;
@@ -342,13 +535,71 @@ body {
 
 .barber-title {
   font-size: 10px;
-  color: var(--text-secondary);
+  color: var(--text-muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-/* Date Selector (Horizontal Scroll) */
+/* Portfolyo Galerisi */
+.portfolio-scroll {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  scrollbar-width: none;
+}
+
+.portfolio-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.portfolio-scroll img {
+  flex: 0 0 95px;
+  width: 95px;
+  height: 95px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  transition: transform 0.2s, border-color 0.2s;
+  cursor: pointer;
+}
+
+.portfolio-scroll img:hover {
+  transform: scale(1.05);
+  border-color: var(--gold-primary);
+}
+
+/* ======================================================== */
+/* 📅 ADIM 3: TARİH SEÇİCİ */
+/* ======================================================== */
+
+.cal-picker-wrap {
+  position: relative;
+}
+
+.cal-picker-btn {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--gold-primary);
+  background: rgba(223, 177, 91, 0.1);
+  border: 1px solid var(--gold-border);
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+#calendarPicker {
+  position: absolute;
+  opacity: 0;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
 .date-scroll {
   display: flex;
   gap: 8px;
@@ -362,14 +613,14 @@ body {
 }
 
 .date-pill {
-  flex: 0 0 76px;
+  flex: 0 0 78px;
   background: var(--bg-card);
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
   padding: 10px 4px;
   text-align: center;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s;
 }
 
 .date-pill:hover {
@@ -377,25 +628,28 @@ body {
 }
 
 .date-pill.selected {
-  background: var(--gold);
-  border-color: var(--gold);
-  color: #000;
+  background: var(--gold-primary);
+  border-color: var(--gold-primary);
+  color: #06080c;
+  box-shadow: 0 4px 15px var(--gold-glow);
 }
 
 .date-day-name {
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--text-secondary);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
   text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .date-pill.selected .date-day-name {
-  color: rgba(0,0,0,0.8);
+  color: rgba(6, 8, 12, 0.7);
 }
 
 .date-day-num {
-  font-size: 18px;
-  font-weight: 700;
+  font-family: var(--font-serif);
+  font-size: 20px;
+  font-weight: 800;
   margin: 2px 0;
 }
 
@@ -405,10 +659,30 @@ body {
 }
 
 .date-pill.selected .date-month {
-  color: rgba(0,0,0,0.8);
+  color: rgba(6, 8, 12, 0.85);
+  font-weight: 700;
 }
 
-/* Time Slot Grid */
+.date-pill.holiday {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.date-pill.holiday .date-month {
+  color: var(--red);
+  font-weight: 700;
+}
+
+/* ======================================================== */
+/* ⏰ ADIM 4: SAAT SEÇİCİ */
+/* ======================================================== */
+
+.selected-time-badge {
+  font-size: 12px;
+  color: var(--gold-primary);
+  font-weight: 700;
+}
+
 .slots-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -422,40 +696,44 @@ body {
 }
 
 .slot-btn {
-  padding: 10px 4px;
+  padding: 11px 4px;
   background: var(--bg-card);
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
   color: var(--text-primary);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   text-align: center;
-  transition: all 0.2s ease;
+  transition: all 0.2s;
 }
 
 .slot-btn:hover:not(:disabled) {
   background: var(--bg-card-hover);
-  border-color: var(--gold);
+  border-color: var(--gold-primary);
 }
 
 .slot-btn.selected {
-  background: var(--gold);
-  border-color: var(--gold);
-  color: #000;
-  box-shadow: 0 0 10px var(--gold-glow);
+  background: var(--gold-primary);
+  border-color: var(--gold-primary);
+  color: #06080c;
+  font-weight: 800;
+  box-shadow: 0 0 12px var(--gold-glow);
 }
 
 .slot-btn:disabled {
-  opacity: 0.35;
-  background: #0d121b;
-  border-color: #1a2333;
+  opacity: 0.3;
+  background: #090c12;
+  border-color: #141a24;
   color: var(--text-muted);
   cursor: not-allowed;
   text-decoration: line-through;
 }
 
-/* Customer Input Form */
+/* ======================================================== */
+/* 👤 ADIM 5: MÜŞTERİ BİLGİLERİ FORMU */
+/* ======================================================== */
+
 .form-group {
   margin-bottom: 12px;
 }
@@ -472,19 +750,157 @@ body {
   width: 100%;
   padding: 12px 14px;
   background: var(--bg-input);
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
   color: var(--text-primary);
-  font-size: 16px; /* iOS Safari otomatik yakınlaştırma (zoom) engellemek için 16px */
-  transition: border-color 0.2s;
+  font-size: 16px; /* iOS Safari otomatik zoom engelleme */
+  transition: border-color 0.2s, box-shadow 0.2s;
   outline: none;
 }
 
 .form-input:focus {
-  border-color: var(--gold);
+  border-color: var(--gold-primary);
+  box-shadow: 0 0 10px rgba(223, 177, 91, 0.2);
 }
 
-/* Sticky Bottom Summary Bar */
+/* ======================================================== */
+/* 🎫 SAĞ SİDEBAR: VIP RANDEVU KARTI */
+/* ======================================================== */
+
+.ticket-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.ticket-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.gold-icon {
+  font-size: 24px;
+}
+
+.ticket-brand h4 {
+  font-family: var(--font-serif);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #fff;
+}
+
+.ticket-brand span {
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  color: var(--gold-primary);
+  font-weight: 700;
+}
+
+.ticket-badge {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  padding: 4px 8px;
+  background: rgba(223, 177, 91, 0.15);
+  border: 1px solid var(--gold-border);
+  color: var(--gold-light);
+  border-radius: 4px;
+}
+
+.ticket-divider {
+  width: 100%;
+  height: 1px;
+  border-top: 1px dashed rgba(223, 177, 91, 0.25);
+  margin-bottom: 16px;
+}
+
+.desktop-preview-box {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  margin-bottom: 18px;
+}
+
+.preview-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+}
+
+.preview-row-col {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.p-title {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.preview-services-box {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  max-height: 130px;
+  overflow-y: auto;
+}
+
+.preview-service-tag {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  border-left: 3px solid var(--gold-primary);
+}
+
+.empty-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.form-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.step-tag-mini {
+  font-family: var(--font-serif);
+  font-size: 10px;
+  background: var(--gold-primary);
+  color: #06080c;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 800;
+}
+
+.form-title-wrap h5 {
+  font-family: var(--font-serif);
+  font-size: 14px;
+  color: #fff;
+}
+
+/* ======================================================== */
+/* 💵 TUTAR & STICKY BOTTOM BAR */
+/* ======================================================== */
+
 .bottom-bar {
   position: fixed;
   bottom: 0;
@@ -492,17 +908,17 @@ body {
   transform: translateX(-50%);
   width: 100%;
   max-width: 540px;
-  background: rgba(15, 23, 42, 0.92);
+  background: rgba(11, 15, 24, 0.94);
   -webkit-backdrop-filter: blur(16px);
   backdrop-filter: blur(16px);
-  border-top: 1px solid var(--border-color);
+  border-top: 1px solid var(--border-subtle);
   padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
   z-index: 50;
-  box-shadow: 0 -8px 24px rgba(0,0,0,0.5);
+  box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.6);
 }
 
 .bottom-info {
@@ -510,56 +926,135 @@ body {
   flex-direction: column;
 }
 
-.bottom-price {
-  font-size: 18px;
+.total-label-wrap span {
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  color: var(--text-muted);
   font-weight: 800;
-  color: var(--gold);
+}
+
+.bottom-price {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--gold-primary);
 }
 
 .bottom-duration {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--text-secondary);
 }
 
 .btn-whatsapp {
   flex: 1;
-  max-width: 240px;
-  padding: 12px 16px;
-  background: #25d366;
+  max-width: 250px;
+  padding: 13px 18px;
+  background: var(--green-wa);
   color: #fff;
   border: none;
   border-radius: var(--radius-sm);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   cursor: pointer;
-  box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3);
-  transition: all 0.2s ease;
+  box-shadow: 0 4px 18px var(--green-glow);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.btn-whatsapp:hover {
-  background: #20ba5a;
-  transform: translateY(-1px);
+.btn-whatsapp:hover:not(:disabled) {
+  background: var(--green-wa-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 22px var(--green-glow);
 }
 
 .btn-whatsapp:disabled {
-  background: #334155;
-  color: #64748b;
+  background: #1c2433;
+  color: var(--text-muted);
   cursor: not-allowed;
   box-shadow: none;
   transform: none;
 }
 
-/* Modals & Overlays */
+.ticket-guarantee-text {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-align: center;
+  margin-top: 10px;
+  line-height: 1.4;
+}
+
+/* ======================================================== */
+/* 📜 GEÇMİŞ & FOOTER */
+/* ======================================================== */
+
+.history-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-left: 3px solid var(--blue);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  margin-bottom: 10px;
+}
+
+.history-card-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.btn-close-clean {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.salon-footer {
+  text-align: center;
+  padding: 24px 16px 40px;
+  border-top: 1px solid var(--border-subtle);
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.footer-crest {
+  font-family: var(--font-serif);
+  font-size: 13px;
+  letter-spacing: 2px;
+  color: var(--gold-primary);
+  margin-bottom: 8px;
+  font-weight: 800;
+}
+
+.footer-links {
+  margin-top: 10px;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.footer-links a {
+  color: var(--gold-primary);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+/* ======================================================== */
+/* 🎯 MODAL VE MAKBUZ STİLLERİ */
+/* ======================================================== */
+
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.75);
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
+  background: rgba(4, 6, 10, 0.85);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
   display: none;
   align-items: center;
   justify-content: center;
@@ -573,108 +1068,15 @@ body {
 
 .modal-content {
   background: var(--bg-card);
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--gold-border);
   border-radius: var(--radius-lg);
   width: 100%;
   max-width: 440px;
-  padding: 24px;
-  box-shadow: var(--shadow-card);
+  padding: 28px 24px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
   position: relative;
   max-height: 90vh;
   overflow-y: auto;
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.modal-title {
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-.modal-close {
-  background: transparent;
-  border: none;
-  color: var(--text-secondary);
-  font-size: 22px;
-  cursor: pointer;
-}
-
-/* Success View */
-.success-card {
-  text-align: center;
-  padding: 20px 0;
-}
-
-.success-icon {
-  width: 64px;
-  height: 64px;
-  background: var(--green-glow);
-  color: var(--green);
-  border-radius: 50%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 32px;
-  margin-bottom: 16px;
-}
-
-.success-card h2 {
-  font-size: 20px;
-  font-weight: 700;
-  margin-bottom: 8px;
-}
-
-.success-card p {
-  font-size: 13px;
-  color: var(--text-secondary);
-  margin-bottom: 20px;
-  line-height: 1.5;
-}
-
-.summary-receipt {
-  background: var(--bg-input);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  padding: 16px;
-  text-align: left;
-  margin-bottom: 20px;
-}
-
-.receipt-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 13px;
-  padding: 8px 0;
-  border-bottom: 1px dashed var(--border-color);
-  gap: 12px;
-}
-
-.receipt-row.receipt-row-col {
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
-}
-
-.receipt-services-list {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
-  padding: 8px 12px;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.receipt-services-list div {
-  font-size: 12px;
-  color: var(--text-primary);
-  line-height: 1.6;
 }
 
 .btn-modal-close-corner {
@@ -687,28 +1089,160 @@ body {
   border: 1px solid rgba(239, 68, 68, 0.4);
   color: var(--red);
   border-radius: 50%;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: bold;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s;
   z-index: 10;
 }
 
 .btn-modal-close-corner:hover {
   background: var(--red);
   color: #fff;
-  transform: scale(1.05);
+}
+
+.success-card {
+  text-align: center;
+}
+
+.success-icon-gold {
+  width: 60px;
+  height: 60px;
+  background: rgba(223, 177, 91, 0.15);
+  color: var(--gold-primary);
+  border: 2px solid var(--gold-border);
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  margin-bottom: 14px;
+  font-weight: 900;
+}
+
+.success-headline {
+  font-family: var(--font-serif);
+  font-size: 20px;
+  color: #fff;
+  margin-bottom: 6px;
+}
+
+.success-sub {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 18px;
+  line-height: 1.5;
+}
+
+.summary-receipt {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  text-align: left;
+  margin-bottom: 18px;
+}
+
+.receipt-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  padding: 8px 0;
+  border-bottom: 1px dashed var(--border-subtle);
+  gap: 12px;
+}
+
+.receipt-row.receipt-row-col {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.receipt-services-list {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  width: 100%;
+}
+
+.receipt-services-list div {
+  font-size: 12px;
+  color: var(--text-primary);
+  line-height: 1.6;
 }
 
 .receipt-row:last-child {
   border-bottom: none;
   padding-top: 10px;
+  font-weight: 800;
+  font-size: 16px;
+  color: var(--gold-primary);
+  font-family: var(--font-serif);
+}
+
+.btn-gold-success {
+  width: 100%;
+  max-width: none;
+  text-decoration: none;
+  margin-bottom: 8px;
+  padding: 14px;
+}
+
+.btn-cal-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 11px;
+  text-decoration: none;
+  font-size: 13px;
   font-weight: 700;
-  font-size: 15px;
-  color: var(--gold);
+  background: rgba(66, 133, 244, 0.12);
+  border: 1px solid #4285f4;
+  color: #4285f4;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.qr-share-box {
+  text-align: center;
+  margin: 12px 0;
+}
+
+.qr-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.qr-image {
+  border-radius: 8px;
+  width: 110px;
+  height: 110px;
+  border: 2px solid var(--gold-border);
+}
+
+.btn-new-appointment {
+  width: 100%;
+  padding: 11px;
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.btn-new-appointment:hover {
+  background: var(--bg-card-hover);
+  color: #fff;
 }
 
 /* Toast */
@@ -717,14 +1251,14 @@ body {
   top: 20px;
   left: 50%;
   transform: translateX(-50%);
-  background: #1e293b;
-  border: 1px solid var(--border-color);
+  background: #121927;
+  border: 1px solid var(--gold-border);
   color: #fff;
-  padding: 10px 18px;
+  padding: 10px 20px;
   border-radius: 30px;
   font-size: 13px;
-  font-weight: 500;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+  font-weight: 600;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
   z-index: 200;
   opacity: 0;
   pointer-events: none;
@@ -734,88 +1268,12 @@ body {
 .toast.show {
   opacity: 1;
 }
-/* ========== YENİ ÖZELLİKLER ========== */
-
-/* Portfolyo Scroll Galerisi */
-.portfolio-scroll {
-  display: flex;
-  gap: 10px;
-  overflow-x: auto;
-  padding-bottom: 6px;
-  scrollbar-width: none;
-}
-.portfolio-scroll::-webkit-scrollbar { display: none; }
-.portfolio-scroll img {
-  flex: 0 0 100px;
-  width: 100px;
-  height: 100px;
-  object-fit: cover;
-  border-radius: var(--radius-sm);
-  border: 2px solid var(--border-color);
-  transition: transform 0.2s, border-color 0.2s;
-  cursor: pointer;
-}
-.portfolio-scroll img:hover {
-  transform: scale(1.05);
-  border-color: var(--gold);
-}
-
-/* Tatil / Kapalı Günler */
-.date-pill.holiday {
-  background: rgba(239, 68, 68, 0.08);
-  border-color: rgba(239, 68, 68, 0.3);
-}
-.date-pill.holiday .date-month {
-  color: var(--red);
-  font-weight: 700;
-  font-size: 9px;
-}
-
-/* Randevu Geçmişi */
-.history-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-left: 3px solid var(--blue);
-  border-radius: var(--radius-md);
-  padding: 12px 14px;
-  margin-bottom: 10px;
-}
-.history-card-header {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 4px;
-  font-weight: 600;
-  font-size: 13px;
-}
-
-/* Masaüstünde ince scroll çubuğu göster */
-@media (hover: hover) {
-  .barber-scroll, .date-scroll, .admin-tabs, .portfolio-scroll {
-    scrollbar-width: thin;
-    scrollbar-color: var(--border-color) transparent;
-    cursor: grab;
-  }
-  .barber-scroll::-webkit-scrollbar,
-  .date-scroll::-webkit-scrollbar,
-  .admin-tabs::-webkit-scrollbar,
-  .portfolio-scroll::-webkit-scrollbar { height: 4px; display: block; }
-  .barber-scroll::-webkit-scrollbar-thumb,
-  .date-scroll::-webkit-scrollbar-thumb,
-  .admin-tabs::-webkit-scrollbar-thumb,
-  .portfolio-scroll::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
-}
-
-/* Calendar picker karanlık tema */
-input[type="date"]::-webkit-calendar-picker-indicator {
-  filter: invert(0.7);
-  cursor: pointer;
-}
 
 /* ======================================================== */
-/* 📱 MOBİL VE 💻 MASAÜSTÜ GELİŞMİŞ DÜZEN & OPTİMİZASYON */
+/* 📱 MOBİL VE 💻 MASAÜSTÜ DUO DÜZEN SİSTEMİ */
 /* ======================================================== */
 
-/* MOBİL GÖRÜNÜM (Varsayılan ve < 1024px) */
+/* MOBİL (< 1024px) */
 @media (max-width: 1023px) {
   .desktop-layout {
     display: flex;
@@ -833,8 +1291,10 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   .main-footer-section {
     order: 3;
   }
-  .sidebar-card-header,
-  .desktop-preview-box {
+  .ticket-header,
+  .ticket-divider,
+  .desktop-preview-box,
+  .ticket-guarantee-text {
     display: none !important;
   }
   .sidebar-card {
@@ -848,10 +1308,9 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   }
 }
 
-/* 💻 MASAÜSTÜ ULTRA PREMİUM GÖRÜNÜM (>= 1024px) */
+/* 💻 MASAÜSTÜ BESPOKE ATELIER DÜZENİ (>= 1024px) */
 @media (min-width: 1024px) {
   body {
-    background: radial-gradient(circle at 50% 0%, #151f32 0%, #0b0f17 100%);
     padding: 40px 24px 60px;
     align-items: flex-start;
   }
@@ -859,120 +1318,65 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   .app-container {
     max-width: 1260px !important;
     background: transparent !important;
-    box-shadow: none !important;
     padding-bottom: 0 !important;
   }
 
   .desktop-layout {
     display: grid !important;
     grid-template-columns: minmax(0, 1fr) 420px !important;
-    gap: 32px !important;
+    gap: 36px !important;
     align-items: start !important;
   }
 
   /* SOL ANA KOLON */
   .main-column {
     background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: 24px;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-xl);
     overflow: hidden;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.55);
   }
 
   .shop-hero {
-    height: 250px;
+    height: 260px;
   }
 
   .shop-header {
-    padding: 0 32px 24px 32px;
+    padding: 0 36px 28px 36px;
     margin-top: -65px;
   }
 
-  .shop-logo {
-    width: 92px;
-    height: 92px;
-    border-width: 4px;
+  .logo-wrapper {
+    width: 96px;
+    height: 96px;
   }
 
   .shop-title h1 {
-    font-size: 26px;
-  }
-
-  .shop-title p {
-    font-size: 15px;
-  }
-
-  .shop-meta {
-    gap: 10px;
-    margin-top: 10px;
+    font-size: 28px;
   }
 
   .section {
-    padding: 24px 32px;
+    padding: 26px 36px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.04);
   }
 
-  .section:last-child {
-    border-bottom: none;
-  }
-
   .section-title {
-    font-size: 18px;
+    font-size: 19px;
   }
 
-  /* Hizmetleri Masaüstünde 2 Sütunlu Izgara Yap */
+  /* Hizmetleri Masaüstünde 2 Sütunlu Prestij Kartı Yap */
   .services-grid {
     display: grid !important;
     grid-template-columns: repeat(2, 1fr) !important;
-    gap: 14px !important;
+    gap: 16px !important;
   }
 
   .service-card {
-    padding: 16px;
-    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s, background 0.2s;
+    padding: 18px;
   }
 
   .service-card:hover {
     transform: translateY(-3px);
-    border-color: var(--gold);
-    background: var(--bg-card-hover);
-  }
-
-  .service-icon {
-    font-size: 30px;
-    width: 50px;
-    height: 50px;
-  }
-
-  .service-info h3 {
-    font-size: 16px;
-  }
-
-  /* Usta ve Portfolyo */
-  .barber-card {
-    flex: 0 0 135px;
-    padding: 16px 10px;
-    transition: transform 0.2s, border-color 0.2s;
-  }
-
-  .barber-card:hover {
-    transform: translateY(-2px);
-  }
-
-  .barber-avatar {
-    width: 64px;
-    height: 64px;
-  }
-
-  .barber-name {
-    font-size: 13px;
-  }
-
-  .portfolio-scroll img {
-    flex: 0 0 130px;
-    width: 130px;
-    height: 130px;
-    border-radius: 12px;
   }
 
   /* Saat Dilimleri 6 Sütun */
@@ -984,10 +1388,10 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   .slot-btn {
     padding: 12px 6px;
     font-size: 14px;
-    border-radius: 10px;
+    border-radius: 8px;
   }
 
-  /* SAĞ SABİT SİDEBAR */
+  /* SAĞ SİDEBAR (VIP TİCKET KARTI) */
   .sidebar-column {
     position: sticky !important;
     top: 30px !important;
@@ -996,94 +1400,34 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
   .sidebar-card {
     background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: 24px;
-    padding: 24px;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    border: 1px solid var(--gold-border);
+    border-radius: var(--radius-xl);
+    padding: 26px;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.65);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
   }
 
-  .sidebar-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-bottom: 16px;
-    border-bottom: 1px solid var(--border-color);
+  .customer-form-section {
+    padding: 0 !important;
     margin-bottom: 18px;
   }
 
-  /* Canlı Önizleme Kutusu */
-  .desktop-preview-box {
-    display: flex !important;
-    flex-direction: column;
-    gap: 12px;
-    background: rgba(0, 0, 0, 0.25);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    padding: 16px;
-    margin-bottom: 20px;
-  }
-
-  .preview-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 13px;
-  }
-
-  .preview-item-col {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-
-  .preview-label {
-    color: var(--text-secondary);
-    font-size: 12px;
-    font-weight: 500;
-  }
-
-  .preview-services-box {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    width: 100%;
-    max-height: 140px;
-    overflow-y: auto;
-  }
-
-  .preview-service-tag {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: rgba(255, 255, 255, 0.04);
-    padding: 6px 10px;
-    border-radius: 6px;
-    font-size: 12px;
-    border-left: 3px solid var(--gold);
-  }
-
-  .customer-form-section {
-    padding: 0 !important;
-    margin-bottom: 16px;
-  }
-
-  /* Alt Barı Masaüstünde Sağ Kartın Parçası Yap */
+  /* Alt Bar Masaüstünde Kartın İçi Olur */
   .bottom-bar {
     position: static !important;
     transform: none !important;
     width: 100% !important;
     max-width: none !important;
     background: transparent !important;
-    padding: 16px 0 0 0 !important;
-    border-top: 1px dashed var(--border-color) !important;
+    padding: 18px 0 0 0 !important;
+    border-top: 1px dashed var(--gold-border) !important;
     box-shadow: none !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
     flex-direction: column !important;
     align-items: stretch !important;
-    gap: 14px !important;
+    gap: 16px !important;
   }
 
   .bottom-info {
@@ -1094,28 +1438,23 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   }
 
   .bottom-price {
-    font-size: 26px;
+    font-size: 28px;
     font-weight: 800;
-    color: var(--gold);
-  }
-
-  .bottom-duration {
-    font-size: 13px;
-    color: var(--text-secondary);
   }
 
   .btn-whatsapp {
     max-width: none !important;
     width: 100% !important;
-    padding: 14px 20px;
+    padding: 15px 20px;
     font-size: 15px;
     border-radius: 12px;
-    justify-content: center;
-    transition: transform 0.2s, background 0.2s, box-shadow 0.2s;
   }
+}
 
-  .btn-whatsapp:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(37, 211, 102, 0.4);
+/* Masaüstü İnce Scroll Bar */
+@media (hover: hover) {
+  .barber-scroll, .date-scroll, .portfolio-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: var(--gold-border) transparent;
   }
 }

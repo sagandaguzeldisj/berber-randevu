@@ -3,194 +3,290 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Gold Makas | Kolay Berber Randevusu</title>
+  <title>GOLD MAKAS | Atelier de Barbier • VIP Randevu Sistemi</title>
+  
+  <!-- Lüks Tipografi -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
   <link rel="stylesheet" href="styles.css">
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#d97706">
+  <meta name="theme-color" content="#07090e">
   <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/2822/2822452.png">
 </head>
 <body>
 
+  <!-- Üst Lüks Berber İpi & Rozet Çubuğu -->
+  <div class="luxury-barber-ribbon"></div>
+
   <div class="app-container">
     <div class="desktop-layout">
       
-      <!-- SOL / ANA AKIŞ KOLONU -->
+      <!-- SOL / ANA AKIŞ KOLONU (Salon Ritüelleri & Menü) -->
       <div class="main-column">
-        <!-- Hero Banner -->
-        <div id="shopHero" class="shop-hero" style="background-image: url('https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=1400&q=80');"></div>
+        
+        <!-- Luxury Hero Banner -->
+        <div id="shopHero" class="shop-hero" style="background-image: url('https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=1600&q=85');">
+          <div class="hero-vintage-badge">EST. 2014 • İSTANBUL</div>
+        </div>
 
-        <!-- Shop Header -->
+        <!-- Salon Profili & Prestij Başlığı -->
         <header class="shop-header">
           <div class="shop-profile">
-            <img id="shopLogo" class="shop-logo" src="https://cdn-icons-png.flaticon.com/512/2822/2822452.png" alt="Logo">
+            <div class="logo-wrapper">
+              <img id="shopLogo" class="shop-logo" src="https://cdn-icons-png.flaticon.com/512/2822/2822452.png" alt="Gold Makas Crest">
+              <div class="logo-gold-ring"></div>
+            </div>
             <div class="shop-title">
-              <h1 id="shopName">Gold Makas <span>💈</span></h1>
-              <p id="shopSlogan">Geleneksel Ustalık & Modern Çizgiler</p>
+              <div class="salon-pre-title">GELENEKSEL USTURA & MODERN STİL ATÖLYESİ</div>
+              <h1 id="shopName">GOLD MAKAS <span>✂️</span></h1>
+              <p id="shopSlogan">"Her Tıraş Bir Zanaat, Her Müşteri Bir Beyefendi"</p>
             </div>
           </div>
+
+          <!-- Rozetler & Prestij İstatistikleri -->
           <div class="shop-meta">
-            <span id="shopStatusBadge" class="badge badge-open">● Dükkan Açık</span>
+            <span id="shopStatusBadge" class="badge badge-open">● Salon Açık</span>
             <span id="shopHoursBadge" class="badge">⏰ 09:00 - 21:00</span>
-            <span class="badge" style="color:var(--gold);">⭐ 4.9 (500+ Yorum)</span>
-            <a id="shopInstaLink" href="#" target="_blank" class="badge" style="text-decoration:none;">📸 @goldmakas</a>
+            <span class="badge badge-vip">👑 VIP Hizmet Konsepti</span>
+            <span class="badge badge-rating">⭐ 4.9 <small>(520+ Yorum)</small></span>
+            <a id="shopInstaLink" href="#" target="_blank" class="badge badge-link">📸 @goldmakas</a>
           </div>
-          <div id="shopAddress" class="shop-address">📍 Bağdat Caddesi No:114/B, Kadıköy / İstanbul</div>
+
+          <div id="shopAddress" class="shop-address">
+            📍 Bağdat Caddesi No:114/B, Suadiye • Kadıköy / İstanbul
+          </div>
+
+          <!-- Prestij Avantajları Barı -->
+          <div class="luxury-perks-bar">
+            <div class="perk-item">
+              <span class="perk-icon">🧴</span>
+              <div>
+                <strong>Tek Kullanımlık Havlu</strong>
+                <span>%100 Hijyen & Sterilizasyon</span>
+              </div>
+            </div>
+            <div class="perk-item">
+              <span class="perk-icon">☕</span>
+              <div>
+                <strong>İkram & Lounge</strong>
+                <span>Taze Kahve & Özel Kokteyl</span>
+              </div>
+            </div>
+            <div class="perk-item">
+              <span class="perk-icon">💈</span>
+              <div>
+                <strong>Özel Sıcak Havlu</strong>
+                <span>Buhar & Esansiyel Masaj</span>
+              </div>
+            </div>
+          </div>
         </header>
 
         <div class="main-steps-container">
-          <!-- STEP 1: HİZMET -->
+          
+          <!-- ADIM 1: HİZMET & BAKIM RİTÜELLERİ -->
           <section class="section">
             <div class="section-header">
-              <h2 class="section-title"><span class="section-step">1</span> Hizmet Seçiniz</h2>
-              <span id="selectedServicesCount" style="font-size:12px; color:var(--gold); font-weight:600;">0 Hizmet Seçildi</span>
+              <div>
+                <span class="step-tag">ADIM 01</span>
+                <h2 class="section-title">Hizmet & Bakım Ritüelleri</h2>
+                <p class="section-sub">Dilediğiniz hizmetleri seçin, süre ve tutar otomatik hesaplansın.</p>
+              </div>
+              <span id="selectedServicesCount" class="selected-counter">0 Hizmet Seçildi</span>
             </div>
             <div id="servicesList" class="services-grid"></div>
           </section>
 
-          <!-- STEP 2: BERBER -->
+          <!-- ADIM 2: USTA & STİLİST SEÇİMİ -->
           <section class="section">
             <div class="section-header">
-              <h2 class="section-title"><span class="section-step">2</span> Usta / Personel Tercihi</h2>
+              <div>
+                <span class="step-tag">ADIM 02</span>
+                <h2 class="section-title">Usta / Stilist Tercihi</h2>
+                <p class="section-sub">Tıraşınızı gerçekleştirecek ustayı belirleyin veya ilk müsait ustayı seçin.</p>
+              </div>
             </div>
             <div id="barbersList" class="barber-scroll"></div>
           </section>
 
-          <!-- PORTFOLYO (Usta seçince görünür) -->
+          <!-- PORTFOLYO (Usta Seçilince Açılan Sanat Galerisi) -->
           <div id="portfolioSection" class="section" style="display:none;">
             <div class="section-header">
-              <h2 class="section-title">📸 Ustanın Çalışmaları</h2>
+              <div>
+                <span class="step-tag">PORTFOLYO</span>
+                <h2 class="section-title">📸 Ustanın Kesim & Stil Galerisi</h2>
+              </div>
             </div>
             <div id="portfolioGallery" class="portfolio-scroll"></div>
           </div>
 
-          <!-- STEP 3: TARİH -->
+          <!-- ADIM 3: RANDEVU GÜNÜ -->
           <section class="section">
             <div class="section-header">
-              <h2 class="section-title"><span class="section-step">3</span> Randevu Günü</h2>
-              <input type="date" id="calendarPicker" style="background:var(--bg-card);border:1px solid var(--border-color);border-radius:6px;color:var(--text-primary);padding:4px 8px;font-size:12px;cursor:pointer;outline:none;" title="Takvimden seç">
+              <div>
+                <span class="step-tag">ADIM 03</span>
+                <h2 class="section-title">Randevu Günü</h2>
+                <p class="section-sub">Önümüzdeki 7 gün içerisinden uygun bir gün seçin.</p>
+              </div>
+              <div class="cal-picker-wrap">
+                <label for="calendarPicker" class="cal-picker-btn">📅 Takvimden Seç</label>
+                <input type="date" id="calendarPicker" title="Takvimden seç">
+              </div>
             </div>
             <div id="datesList" class="date-scroll"></div>
           </section>
 
-          <!-- STEP 4: SAAT -->
+          <!-- ADIM 4: RANDEVU SAATİ -->
           <section class="section">
             <div class="section-header">
-              <h2 class="section-title"><span class="section-step">4</span> Randevu Saati</h2>
-              <span id="selectedTimeLabel" style="font-size:12px; color:var(--gold); font-weight:600;">Saat Seçilmedi</span>
+              <div>
+                <span class="step-tag">ADIM 04</span>
+                <h2 class="section-title">Randevu Saati Dilimi</h2>
+                <p class="section-sub">Ustanızın müsait çalışma saatleri aşağıda listelenmiştir.</p>
+              </div>
+              <span id="selectedTimeLabel" class="selected-time-badge">Saat Seçilmedi</span>
             </div>
             <div id="slotsList" class="slots-grid"></div>
           </section>
+
         </div>
 
         <div class="main-footer-section">
           <!-- RANDEVU GEÇMİŞİ -->
           <section class="section" id="historySection" style="display:none;">
             <div class="section-header">
-              <h2 class="section-title">🕐 Randevu Geçmişiniz</h2>
-              <button id="btnCloseHistory" style="background:none;border:none;color:var(--text-secondary);cursor:pointer;font-size:18px;">×</button>
+              <h2 class="section-title">🕐 Önceki Randevularınız</h2>
+              <button id="btnCloseHistory" class="btn-close-clean">✕</button>
             </div>
             <div id="historyList"></div>
           </section>
 
-          <footer style="text-align:center; padding:24px 16px 40px; border-top:1px solid var(--border-color); font-size:12px; color:var(--text-muted);">
-            <p>© 2026 Gold Makas Kolay Randevu Sistemi</p>
-            <p style="margin-top:8px;">
-              <a href="/admin.html" style="color:var(--gold); text-decoration:none; font-weight:600;">⚙️ Berber Yönetim Paneli</a>
-            </p>
+          <footer class="salon-footer">
+            <div class="footer-crest">✂️ GOLD MAKAS ✂️</div>
+            <p>© 2026 Gold Makas Atelier de Barbier • Özel WhatsApp Rezervasyon Sistemi</p>
+            <div class="footer-links">
+              <a href="/admin.html">⚙️ Berber Yönetici Girişi</a>
+              <span>•</span>
+              <a href="#shopHero">Yukarı Çık ↑</a>
+            </div>
           </footer>
         </div>
       </div>
 
-      <!-- SAĞ YAN KOLON / SİDEBAR (Özet, Bilgiler ve Buton) -->
+      <!-- SAĞ YAN KOLON: VIP RANDEVU KARTI (Concierge Pass) -->
       <aside class="sidebar-column">
         <div class="sidebar-card">
-          <!-- Masaüstü Başlığı -->
-          <div class="sidebar-card-header">
-            <div style="display:flex; align-items:center; gap:8px;">
-              <span style="font-size:20px;">💈</span>
-              <h3 style="font-size:16px; font-weight:800; color:var(--text-primary);">Randevu Özeti</h3>
+          
+          <!-- Kartın Lüks Başlığı -->
+          <div class="ticket-header">
+            <div class="ticket-brand">
+              <span class="gold-icon">💈</span>
+              <div>
+                <h4>VIP RANDEVU KARTI</h4>
+                <span>GOLD MAKAS ATELIER</span>
+              </div>
             </div>
-            <span class="badge" style="background:rgba(245,158,11,0.15); color:var(--gold); border-color:rgba(245,158,11,0.3);">Anında Onay</span>
+            <span class="ticket-badge">ANINDA REZERVASYON</span>
           </div>
 
-          <!-- Masaüstü Canlı Önizleme Kutusu -->
+          <!-- Perfore Çizgi -->
+          <div class="ticket-divider"></div>
+
+          <!-- Canlı Önizleme Alanı -->
           <div class="desktop-preview-box">
-            <div class="preview-item">
-              <span class="preview-label">📅 Tarih & Saat:</span>
+            <div class="preview-row">
+              <span class="p-title">📅 TARİH & SAAT:</span>
               <strong id="dtPreviewDateTime">Tarih ve saat seçiniz</strong>
             </div>
-            <div class="preview-item">
-              <span class="preview-label">👨‍🦱 Usta Tercihi:</span>
+            <div class="preview-row">
+              <span class="p-title">👨‍🦱 SEÇİLEN USTA:</span>
               <strong id="dtPreviewBarber">Farketmez / İlk Müsait</strong>
             </div>
-            <div class="preview-item preview-item-col">
-              <span class="preview-label">✂️ Seçilen Hizmetler:</span>
+            <div class="preview-row preview-row-col">
+              <span class="p-title">✂️ SEÇİLEN HİZMETLER:</span>
               <div id="dtPreviewServices" class="preview-services-box">
-                <span style="color:var(--text-muted); font-size:12px;">Henüz hizmet seçilmedi</span>
+                <span class="empty-hint">Henüz hizmet seçilmedi</span>
               </div>
             </div>
           </div>
 
-          <!-- STEP 5: MÜŞTERİ BİLGİLERİ -->
+          <!-- ADIM 5: MÜŞTERİ İLETİŞİM BİLGİLERİ -->
           <div class="section customer-form-section">
-            <div class="section-header" style="margin-bottom:12px;">
-              <h2 class="section-title"><span class="section-step">5</span> İletişim Bilgileriniz</h2>
+            <div class="form-title-wrap">
+              <span class="step-tag-mini">05</span>
+              <h5>İletişim & Rezervasyon Sahibi</h5>
             </div>
+            
             <div class="form-group">
               <label class="form-label">Adınız ve Soyadınız *</label>
               <input type="text" id="custName" class="form-input" placeholder="Örn: Burak Özdemir">
             </div>
+            
             <div class="form-group">
-              <label class="form-label">WhatsApp Telefon Numaranız *</label>
+              <label class="form-label">WhatsApp Numaranız *</label>
               <input type="tel" id="custPhone" class="form-input" placeholder="Örn: 0532 123 45 67">
             </div>
+            
             <div class="form-group" style="margin-bottom:0;">
-              <label class="form-label">Özel Notunuz (İsteğe Bağlı)</label>
-              <input type="text" id="custNote" class="form-input" placeholder="Örn: Buhar masajı rica ediyorum...">
+              <label class="form-label">Varsa Özel Not / Tercih (İsteğe Bağlı)</label>
+              <input type="text" id="custNote" class="form-input" placeholder="Örn: Ilık havlu, hassas cilt...">
             </div>
           </div>
 
-          <!-- STICKY BOTTOM BAR (Mobilde altta sabit bar, PC'de bu kartın alt kısmı!) -->
+          <!-- Tutar & Rezervasyon Onay Butonu -->
           <div class="bottom-bar">
             <div class="bottom-info">
+              <div class="total-label-wrap">
+                <span>TOPLAM TUTAR</span>
+                <div id="totalDurationDisplay" class="bottom-duration">0 dk • 0 hizmet</div>
+              </div>
               <div id="totalPriceDisplay" class="bottom-price">0 ₺</div>
-              <div id="totalDurationDisplay" class="bottom-duration">0 dk • 0 hizmet</div>
             </div>
+            
             <button id="btnSubmitAppointment" class="btn-whatsapp" disabled>
-              <span>✂️</span><span>Randevuyu Onayla</span>
+              <span class="btn-wa-icon">✂️</span>
+              <span class="btn-wa-text">Randevuyu WhatsApp ile Onayla</span>
             </button>
+            
+            <p class="ticket-guarantee-text">
+              🔒 Sıfır ön ödeme • Randevunuz doğrudan ustanın WhatsApp hattına iletilir.
+            </p>
           </div>
+
         </div>
       </aside>
 
     </div>
   </div>
 
-  <!-- SUCCESS MODAL -->
+  <!-- SUCCESS MODAL (Kişiye Özel Randevu Makbuzu) -->
   <div id="successModal" class="modal-overlay">
-    <div class="modal-content" style="position: relative;">
+    <div class="modal-content">
       <button id="btnCornerCloseModal" class="btn-modal-close-corner" title="Kapat">✕</button>
       <div class="success-card">
-        <div class="success-icon">✓</div>
-        <h2>Randevunuz Oluşturuldu!</h2>
-        <p>Randevu talebiniz işlendi. WhatsApp açılıyor...</p>
+        <div class="success-icon-gold">✓</div>
+        <h2 class="success-headline">Randevu Talebiniz Alındı!</h2>
+        <p class="success-sub">Randevunuz salona kaydedildi. Ustanın anında görmesi ve onaylaması için WhatsApp açılıyor...</p>
+        
         <div id="receiptContent" class="summary-receipt"></div>
 
-        <a id="btnDirectWhatsApp" href="#" target="_blank" class="btn-whatsapp" style="width:100%;max-width:none;text-decoration:none;margin-bottom:8px;">
-          <span>💬</span><span>WhatsApp ile Gönder</span>
+        <a id="btnDirectWhatsApp" href="#" target="_blank" class="btn-whatsapp btn-gold-success">
+          <span>💬</span><span>WhatsApp ile Ustanıza Gönder</span>
         </a>
 
-        <a id="btnGoogleCal" href="#" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:11px;text-decoration:none;font-size:13px;font-weight:700;background:rgba(66,133,244,0.12);border:1px solid #4285f4;color:#4285f4;border-radius:8px;margin-bottom:8px;">
-          📅 Google Calendar'a Ekle
+        <a id="btnGoogleCal" href="#" target="_blank" class="btn-cal-action">
+          📅 Google Takvim'e Kaydet
         </a>
 
-        <div id="shareQR" style="text-align:center;margin:8px 0 10px;display:none;">
-          <p style="font-size:11px;color:var(--text-secondary);margin-bottom:6px;">📱 Arkadaşına randevu sayfasını paylaş</p>
-          <img id="qrCodeImg" src="" alt="QR" style="border-radius:8px;width:100px;height:100px;">
+        <div id="shareQR" class="qr-share-box" style="display:none;">
+          <p class="qr-label">📱 Dükkan Randevu QR Kodunu Arkadaşınla Paylaş</p>
+          <img id="qrCodeImg" src="" alt="QR" class="qr-image">
         </div>
 
-        <button id="btnCloseModal" class="slot-btn" style="width:100%;border-radius:8px;margin-top:4px;">
-          Yeni Randevu Al
+        <button id="btnCloseModal" class="btn-new-appointment">
+          Yeni Randevu Oluştur
         </button>
       </div>
     </div>
