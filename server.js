@@ -734,16 +734,24 @@ const server = http.createServer(async (req, res) => {
   }
 
   // ==============================
-  // STATİK DOSYA SUNUCUSU (Çift Katmanlı Güvenli Arama)
+  // STATİK DOSYA SUNUCUSU (Akıllı Çok Katmanlı Güvenli Arama)
   // ==============================
   let filePath = path.join(PUBLIC_DIR, pathname === '/' ? 'index.html' : pathname);
   if (!path.extname(filePath) && fs.existsSync(filePath + '.html')) filePath += '.html';
 
-  // Eğer public içinde yoksa, ana dizine de bak (kullanıcı GitHub root'a yüklese bile kusursuz çalışır)
+  // Eğer dosya tam yolunda bulunamazsa (kullanıcı klasörsüz yüklemişse) akıllı arama yap:
   if (!fs.existsSync(filePath)) {
+    const baseName = path.basename(pathname);
+    const inPublic = path.join(PUBLIC_DIR, baseName);
+    const inHaircuts = path.join(PUBLIC_DIR, 'images', 'haircuts', baseName);
+    const inRoot = path.join(__dirname, baseName);
     let altPath = path.join(__dirname, pathname === '/' ? 'index.html' : pathname);
     if (!path.extname(altPath) && fs.existsSync(altPath + '.html')) altPath += '.html';
-    if (fs.existsSync(altPath)) filePath = altPath;
+
+    if (fs.existsSync(inPublic)) filePath = inPublic;
+    else if (fs.existsSync(inHaircuts)) filePath = inHaircuts;
+    else if (fs.existsSync(inRoot)) filePath = inRoot;
+    else if (fs.existsSync(altPath)) filePath = altPath;
   }
 
   const ext = path.extname(filePath).toLowerCase();
