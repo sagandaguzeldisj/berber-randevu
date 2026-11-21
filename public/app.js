@@ -250,7 +250,7 @@ function renderPortfolio(barberId) {
     const title = isObj ? item.title : 'Özel Kesim';
     return `
       <div class="portfolio-item" onclick="window.open('${url}','_blank')" title="${title}">
-        <img src="${url}" alt="${title}" loading="lazy">
+        <img src="${url}" alt="${title}" loading="lazy" onerror="this.onerror=null; this.src='/images/haircuts/mid-fade.jpg'">
         <span class="portfolio-tag">${title}</span>
       </div>
     `;
