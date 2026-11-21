@@ -141,17 +141,19 @@ async function init() {
 function renderShopInfo() {
   const shop = appData.shop || {};
   if (shop.name) {
-    shopName.textContent = shop.name;
     document.title = `${shop.name} • Randevu Sistemi`;
     const footerShop = document.getElementById('footerShopName');
     if (footerShop) footerShop.textContent = shop.name;
   }
-  if (shop.slogan) shopSlogan.textContent = shop.slogan;
-  if (shop.logo) {
+  if (shop.slogan) shopSlogan.textContent = `"${shop.slogan}"`;
+  
+  // Eğer özel bir görsel yüklenmişse ve harici flaticon DEĞİLSE
+  if (shopLogo && shop.logo && !shop.logo.includes('flaticon') && shop.logo !== '/logo_square.svg') {
     shopLogo.src = shop.logo;
-    const fi = document.querySelector("link[rel*='icon']");
-    if (fi) fi.href = shop.logo;
   }
+  const fi = document.querySelector("link[rel*='icon']");
+  if (fi) fi.href = '/logo_square.svg';
+
   if (shop.coverImage) shopHero.style.backgroundImage = `url('${shop.coverImage}')`;
   if (shop.address) shopAddress.innerHTML = `📍 ${shop.address}`;
   if (shop.instagram) {

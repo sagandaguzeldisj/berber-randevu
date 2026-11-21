@@ -3,24 +3,24 @@
 /* ======================================================== */
 
 :root {
-  --bg-deep: #14110D;
-  --bg-main: #18140F;
-  --bg-card: #1E1914;
-  --bg-card-hover: #27211B;
-  --bg-input: #100D0A;
+  --bg-deep: #08090C;
+  --bg-main: #0D0F14;
+  --bg-card: #12151D;
+  --bg-card-hover: #191D28;
+  --bg-input: #0A0C10;
   
-  --gold-primary: #C9A24B;
-  --gold-light: #EDE3CF;
-  --gold-dark: #A27D2B;
-  --gold-glow: rgba(201, 162, 75, 0.22);
-  --gold-border: rgba(201, 162, 75, 0.28);
+  --gold-primary: #D4AF37;
+  --gold-light: #F7E7B4;
+  --gold-dark: #A38018;
+  --gold-glow: rgba(212, 175, 55, 0.25);
+  --gold-border: rgba(212, 175, 55, 0.35);
   
-  --border-subtle: #2B231B;
-  --border-hover: rgba(201, 162, 75, 0.55);
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-hover: rgba(212, 175, 55, 0.6);
   
-  --text-primary: #EDE3CF;
-  --text-secondary: #C2B6A3;
-  --text-muted: #8E8272;
+  --text-primary: #FFFFFF;
+  --text-secondary: #94A3B8;
+  --text-muted: #64748B;
   
   --green-wa: #25d366;
   --green-wa-hover: #20ba5a;
@@ -53,28 +53,27 @@ body {
   justify-content: center;
   padding-bottom: 90px;
   background-image: 
-    radial-gradient(ellipse 90% 60% at 50% -10%, rgba(201, 162, 75, 0.16) 0%, transparent 70%),
-    radial-gradient(circle at 0% 35%, rgba(201, 162, 75, 0.05) 0%, transparent 45%),
-    radial-gradient(circle at 100% 35%, rgba(201, 162, 75, 0.05) 0%, transparent 45%),
-    radial-gradient(circle at 50% 100%, rgba(16, 13, 10, 0.95) 0%, transparent 70%);
+    radial-gradient(ellipse 90% 50% at 50% -10%, rgba(212, 175, 55, 0.12) 0%, transparent 65%),
+    radial-gradient(circle at 10% 40%, rgba(30, 41, 59, 0.2) 0%, transparent 50%),
+    radial-gradient(circle at 90% 40%, rgba(30, 41, 59, 0.2) 0%, transparent 50%);
   background-attachment: fixed;
   overflow-x: hidden;
 }
 
-/* Yan Boşlukları Dolduran Zarif Ortam Işıkları */
+/* Yan Boşlukları Dolduran Şık Ortam Işıkları */
 .ambient-glow {
   position: fixed;
   top: 15%;
-  width: 420px;
+  width: 440px;
   height: 650px;
   border-radius: 50%;
   pointer-events: none;
-  filter: blur(140px);
+  filter: blur(150px);
   z-index: 0;
-  opacity: 0.35;
+  opacity: 0.25;
 }
-.glow-left { left: -140px; background: radial-gradient(circle, rgba(201, 162, 75, 0.3) 0%, transparent 70%); }
-.glow-right { right: -140px; background: radial-gradient(circle, rgba(201, 162, 75, 0.3) 0%, transparent 70%); }
+.glow-left { left: -140px; background: radial-gradient(circle, rgba(212, 175, 55, 0.25) 0%, transparent 70%); }
+.glow-right { right: -140px; background: radial-gradient(circle, rgba(30, 58, 138, 0.25) 0%, transparent 70%); }
 
 .app-container {
   width: 100%;
@@ -136,47 +135,54 @@ body {
 
 .logo-wrapper {
   position: relative;
-  width: 76px;
-  height: 76px;
+  width: 84px;
+  height: 84px;
   flex-shrink: 0;
+  border-radius: 18px;
+  background: var(--bg-card);
+  border: 1.5px solid var(--gold-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba(212, 175, 55, 0.2);
+  padding: 8px;
 }
 
-.shop-logo {
+.brand-crest-vector {
   width: 100%;
   height: 100%;
-  border-radius: 50%;
-  background: var(--bg-card);
-  object-fit: cover;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
-  border: 2px solid var(--gold-primary);
-}
-
-.logo-gold-ring {
-  position: absolute;
-  inset: -4px;
-  border-radius: 50%;
-  border: 1px dashed rgba(223, 177, 91, 0.4);
-  pointer-events: none;
-}
-
-.salon-pre-title {
-  font-size: 9px;
-  letter-spacing: 2px;
-  color: var(--gold-primary);
-  font-weight: 800;
-  text-transform: uppercase;
-  margin-bottom: 2px;
+  filter: drop-shadow(0 2px 8px rgba(212, 175, 55, 0.3));
 }
 
 .shop-title h1 {
   font-family: var(--font-serif);
-  font-size: 22px;
+  font-size: 26px;
   font-weight: 800;
-  letter-spacing: 1px;
-  color: #fff;
+  letter-spacing: 5px;
+  color: var(--gold-primary);
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+.brand-sub-badge {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  margin: 4px 0 6px;
+}
+
+.sub-line {
+  width: 36px;
+  height: 1.5px;
+  background: var(--gold-primary);
+}
+
+.sub-text {
+  font-size: 11px;
+  letter-spacing: 6px;
+  color: var(--gold-light);
+  font-weight: 600;
+  text-transform: uppercase;
 }
 
 .shop-title p {
