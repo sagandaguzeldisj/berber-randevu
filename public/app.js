@@ -248,9 +248,10 @@ function renderPortfolio(barberId) {
     const isObj = typeof item === 'object' && item !== null;
     const url = isObj ? item.url : item;
     const title = isObj ? item.title : 'Özel Kesim';
+    const fileName = (url || '').split('/').pop();
     return `
       <div class="portfolio-item" onclick="window.open('${url}','_blank')" title="${title}">
-        <img src="${url}" alt="${title}" loading="lazy" onerror="this.onerror=null; this.src='/images/haircuts/mid-fade.jpg'">
+        <img src="${url}" alt="${title}" loading="lazy" onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='/${fileName}';}else{this.onerror=null;this.src='/mid-fade.jpg';}">
         <span class="portfolio-tag">${title}</span>
       </div>
     `;
