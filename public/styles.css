@@ -550,12 +550,12 @@ body {
   text-overflow: ellipsis;
 }
 
-/* Portfolyo Galerisi */
+/* Portfolyo Galerisi (Özel Saç Kesim Modelleri) */
 .portfolio-scroll {
   display: flex;
-  gap: 10px;
+  gap: 14px;
   overflow-x: auto;
-  padding-bottom: 6px;
+  padding: 6px 2px 12px 2px;
   scrollbar-width: none;
 }
 
@@ -563,20 +563,41 @@ body {
   display: none;
 }
 
-.portfolio-scroll img {
-  flex: 0 0 95px;
-  width: 95px;
-  height: 95px;
-  object-fit: cover;
-  border-radius: var(--radius-sm);
+.portfolio-item {
+  flex: 0 0 135px;
+  width: 135px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--bg-card);
   border: 1px solid var(--border-subtle);
-  transition: transform 0.2s, border-color 0.2s;
+  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
   cursor: pointer;
+  text-align: center;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
 }
 
-.portfolio-scroll img:hover {
-  transform: scale(1.05);
+.portfolio-item:hover {
+  transform: translateY(-4px);
   border-color: var(--gold-primary);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.6), 0 0 15px rgba(212, 175, 55, 0.25);
+}
+
+.portfolio-item img {
+  width: 100%;
+  height: 135px;
+  object-fit: cover;
+  display: block;
+}
+
+.portfolio-tag {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--gold-light);
+  padding: 7px 4px;
+  background: rgba(10, 12, 16, 0.9);
+  letter-spacing: 0.5px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 /* ======================================================== */

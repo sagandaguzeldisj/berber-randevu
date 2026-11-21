@@ -231,22 +231,31 @@ function renderBarbers() {
   renderPortfolio(selection.barberId);
 }
 
-// Portfolyo
+// Portfolyo (Trend Saç Kesim Modelleri)
 function renderPortfolio(barberId) {
   if (barberId === 'any') {
     portfolioSection.style.display = 'none';
     return;
   }
   const barber = (appData.barbers || []).find(b => b.id === barberId);
-  const photos = (barber && barber.portfolio) ? barber.portfolio : [];
-  if (photos.length === 0) {
+  const items = (barber && barber.portfolio) ? barber.portfolio : [];
+  if (items.length === 0) {
     portfolioSection.style.display = 'none';
     return;
   }
   portfolioSection.style.display = 'block';
-  portfolioGallery.innerHTML = photos.map(url =>
-    `<img src="${url}" alt="Çalışma" loading="lazy" onclick="window.open('${url}','_blank')">`
-  ).join('');
+  portfolioGallery.innerHTML = items.map(item => {
+    const isObj = typeof item === 'object' && item !== null;
+    const url = isObj ? item.url : item;
+    const title = isObj ? item.title : 'Özel Kesim';
+    return `
+      <div class="portfolio-item" onclick="window.open('${url}','_blank')" title="${title}">
+        <img src="${url}" alt="${title}" loading="lazy">
+        <span class="portfolio-tag">${title}</span>
+      </div>
+    `;
+  }).join('');
+  enableHScroll(portfolioGallery);
 }
 
 // 7 Günlük Tarihler
