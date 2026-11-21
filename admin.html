@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Berber Yönetim Paneli</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/2822/2822452.png">
+  <style>
+    .admin-body { max-width: 800px; width: 100%; padding-bottom: 40px; }
+    .admin-top-bar { display:flex; justify-content:space-between; align-items:center; padding:16px; background:var(--bg-card); border-bottom:1px solid var(--border-color); }
+    .admin-tabs { display:flex; gap:8px; padding:12px 16px; background:var(--bg-main); border-bottom:1px solid var(--border-color); overflow-x:auto; scrollbar-width:none; }
+    .admin-tabs::-webkit-scrollbar { display:none; }
+    .admin-tab-btn { padding:8px 14px; background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius-sm); color:var(--text-secondary); font-size:12px; font-weight:600; cursor:pointer; white-space:nowrap; transition:all 0.2s; }
+    .admin-tab-btn.active { background:var(--gold); border-color:var(--gold); color:#000; }
+    .tab-content { display:none; padding:16px; }
+    .tab-content.active { display:block; }
+    .app-card { background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius-md); padding:16px; margin-bottom:14px; }
+    .app-card.status-beklemede { border-left:4px solid var(--gold); }
+    .app-card.status-onaylandi { border-left:4px solid var(--green); }
+    .app-card.status-tamamlandi { border-left:4px solid var(--blue); }
+    .app-card.status-iptal { border-left:4px solid var(--red); opacity:0.6; }
+    .app-card-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+    .app-customer-name { font-size:16px; font-weight:700; }
+    .app-badge { font-size:11px; font-weight:700; padding:4px 10px; border-radius:20px; text-transform:uppercase; }
+    .badge-beklemede { background:rgba(245,158,11,0.2); color:var(--gold); }
+    .badge-onaylandi { background:rgba(16,185,129,0.2); color:var(--green); }
+    .badge-tamamlandi { background:rgba(59,130,246,0.2); color:var(--blue); }
+    .badge-iptal { background:rgba(239,68,68,0.2); color:var(--red); }
+    .app-details { font-size:13px; color:var(--text-secondary); line-height:1.7; margin-bottom:12px; }
+    .app-actions { display:flex; gap:8px; flex-wrap:wrap; }
+    .btn-action { padding:6px 12px; border-radius:var(--radius-sm); font-size:12px; font-weight:600; border:1px solid var(--border-color); background:var(--bg-input); color:var(--text-primary); cursor:pointer; display:inline-flex; align-items:center; gap:5px; transition:all 0.2s; text-decoration:none; }
+    .btn-action:hover { background:var(--bg-card-hover); }
+    .btn-action-green { background:rgba(16,185,129,0.15); border-color:rgba(16,185,129,0.4); color:var(--green); }
+    .btn-action-red { background:rgba(239,68,68,0.15); border-color:rgba(239,68,68,0.4); color:var(--red); }
+    .pin-overlay { position:fixed; inset:0; background:var(--bg-main); display:flex; align-items:center; justify-content:center; z-index:999; padding:16px; }
+    .pin-box { background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius-lg); padding:30px; width:100%; max-width:360px; text-align:center; box-shadow:var(--shadow-card); }
+  </style>
+</head>
+<body>
+
+  <!-- PIN GİRİŞ -->
+  <div id="pinOverlay" class="pin-overlay">
+    <div class="pin-box">
+      <div style="font-size:40px;margin-bottom:12px;">💈</div>
+      <h2 style="font-size:18px;margin-bottom:6px;">Yönetim Paneli Girişi</h2>
+      <p style="font-size:12px;color:var(--text-secondary);margin-bottom:20px;">4 haneli PIN kodunuzu giriniz.<br><small>(Varsayılan: 0000)</small></p>
+      <div class="form-group">
+        <input type="password" id="inputPin" class="form-input" style="text-align:center;letter-spacing:8px;font-size:22px;" maxlength="6" placeholder="••••">
+      </div>
+      <button id="btnLogin" class="btn-whatsapp" style="width:100%;max-width:none;background:var(--gold);color:#000;font-weight:700;">Giriş Yap</button>
+      <div id="pinError" style="color:var(--red);font-size:12px;margin-top:12px;display:none;">Hatalı PIN kodu!</div>
+    </div>
+  </div>
+
+  <div class="admin-body">
+    <!-- Header -->
+    <header class="admin-top-bar">
+      <div>
+        <h1 id="adminShopTitle" style="font-size:18px;font-weight:700;color:var(--gold);">Berber Paneli</h1>
+        <p style="font-size:12px;color:var(--text-secondary);">Randevu & Dükkan Yönetimi</p>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button id="toggleOpenBtn" class="badge badge-open" style="cursor:pointer;border:none;">● Dükkan Açık</button>
+        <a href="/" target="_blank" class="btn-action" style="text-decoration:none;">📱 Müşteri Ekranı</a>
+      </div>
+    </header>
+
+    <!-- Tabs -->
+    <nav class="admin-tabs">
+      <button class="admin-tab-btn active" data-tab="appointmentsTab">✂️ Randevular (<span id="countAppointments">0</span>)</button>
+      <button class="admin-tab-btn" data-tab="remindersTab">🔔 Hatırlatmalar (<span id="countReminders" style="color:inherit;">0</span>)</button>
+      <button class="admin-tab-btn" data-tab="servicesTab">📋 Hizmetler</button>
+      <button class="admin-tab-btn" data-tab="barbersTab">👨‍🦱 Personel</button>
+      <button class="admin-tab-btn" data-tab="holidaysTab">📅 Tatil & Kapalı Günler</button>
+      <button class="admin-tab-btn" data-tab="portfolioTab">📸 Portfolyo & QR</button>
+      <button class="admin-tab-btn" data-tab="settingsTab">⚙️ Dükkan Ayarları</button>
+    </nav>
+
+    <!-- TAB: RANDEVULAR -->
+    <main id="appointmentsTab" class="tab-content active">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+        <h2 style="font-size:16px;font-weight:700;">Gelen Randevular</h2>
+        <div style="display:flex;gap:6px;">
+          <button id="filterAll" class="btn-action" style="background:var(--gold);color:#000;">Tümü</button>
+          <button id="filterToday" class="btn-action">Bugün</button>
+          <button id="filterPending" class="btn-action">Bekleyenler</button>
+        </div>
+      </div>
+      <div id="appointmentsList"></div>
+    </main>
+
+    <!-- TAB: HATIRLATMALAR -->
+    <main id="remindersTab" class="tab-content">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <h2 style="font-size:16px;font-weight:700;">📲 WhatsApp Hatırlatmaları</h2>
+        <button onclick="loadAdminData()" class="btn-action">🔄 Yenile</button>
+      </div>
+      <div style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:var(--radius-md);padding:12px;margin-bottom:14px;font-size:12px;color:var(--text-secondary);">
+        ⏰ Onaylı randevular başlamadan 1 saat önce burada otomatik belirir. Butona tıklayarak müşteriye WhatsApp hatırlatması gönderebilirsiniz.
+      </div>
+      <div id="remindersList"></div>
+    </main>
+
+    <!-- TAB: HİZMETLER -->
+    <section id="servicesTab" class="tab-content">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <h2 style="font-size:16px;font-weight:700;">Hizmet Listesi & Fiyatlar</h2>
+        <button id="btnOpenNewService" class="btn-action btn-action-green">+ Yeni Hizmet Ekle</button>
+      </div>
+      <div id="adminServicesList"></div>
+    </section>
+
+    <!-- TAB: PERSONEL -->
+    <section id="barbersTab" class="tab-content">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <h2 style="font-size:16px;font-weight:700;">Personel & Ustalar</h2>
+        <button id="btnOpenNewBarber" class="btn-action btn-action-green">+ Yeni Personel Ekle</button>
+      </div>
+      <div id="adminBarbersList"></div>
+    </section>
+
+    <!-- TAB: TATİL & KAPALI GÜNLER -->
+    <section id="holidaysTab" class="tab-content">
+      <h2 style="font-size:16px;font-weight:700;margin-bottom:16px;">📅 Kapalı Günler & Resmi Tatiller</h2>
+      <p style="font-size:12px;color:var(--text-secondary);margin-bottom:14px;">Eklenen tarihler müşteri ekranında "TATİL" olarak görünür ve randevu alınamaz.</p>
+      <div class="form-group" style="display:flex;gap:10px;">
+        <input type="date" id="holidayDateInput" class="form-input" style="flex:1;">
+        <button onclick="addHoliday()" class="btn-action btn-action-green" style="white-space:nowrap;">+ Ekle</button>
+      </div>
+      <div id="holidaysList" style="margin-top:14px;"></div>
+    </section>
+
+    <!-- TAB: PORTFOLYO & QR -->
+    <section id="portfolioTab" class="tab-content">
+      <h2 style="font-size:16px;font-weight:700;margin-bottom:16px;">📸 Portfolyo & QR Kod</h2>
+
+      <!-- QR KOD -->
+      <div style="background:var(--bg-card);border:1px solid var(--border-color);border-radius:var(--radius-md);padding:16px;margin-bottom:20px;text-align:center;">
+        <h3 style="font-size:14px;font-weight:700;margin-bottom:8px;">📱 Randevu Sayfası QR Kodu</h3>
+        <p style="font-size:12px;color:var(--text-secondary);margin-bottom:12px;">Müşterilerin okutması için dükkan camınıza asın veya masanıza koyun.</p>
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="qrUrlInput" class="form-input" placeholder="https://sizin-link.onrender.com" style="flex:1;text-align:left;">
+          <button onclick="generateQR()" class="btn-action btn-action-green" style="white-space:nowrap;">QR Oluştur</button>
+        </div>
+        <div id="qrOutput" style="margin-top:14px;display:none;">
+          <img id="adminQRImg" src="" alt="QR Kod" style="width:200px;height:200px;border-radius:12px;border:3px solid var(--gold);">
+          <p style="font-size:11px;color:var(--text-secondary);margin-top:8px;">Sağ tık → "Resmi Farklı Kaydet" ile indir ve yazdır</p>
+        </div>
+      </div>
+
+      <!-- PORTFOLYO -->
+      <div>
+        <h3 style="font-size:14px;font-weight:700;margin-bottom:12px;">🖼️ Usta Fotoğraf Portfolyosu</h3>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+          <select id="portfolioBarberSelect" class="form-input" style="flex:1;min-width:150px;"></select>
+          <input type="url" id="portfolioUrlInput" class="form-input" placeholder="https://images.unsplash.com/..." style="flex:2;min-width:180px;">
+          <button onclick="addPortfolioPhoto()" class="btn-action btn-action-green" style="white-space:nowrap;">+ Fotoğraf Ekle</button>
+        </div>
+        <div id="portfolioAdminGallery"></div>
+      </div>
+    </section>
+
+    <!-- TAB: DÜKKAN AYARLARI -->
+    <section id="settingsTab" class="tab-content">
+      <h2 style="font-size:16px;font-weight:700;margin-bottom:16px;">Dükkan & Randevu Ayarları</h2>
+      <form id="settingsForm">
+        <div class="form-group">
+          <label class="form-label">Dükkan Adı</label>
+          <input type="text" id="settingName" class="form-input" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Slogan</label>
+          <input type="text" id="settingSlogan" class="form-input">
+        </div>
+        <div class="form-group">
+          <label class="form-label">WhatsApp Numarası (90 ile başlayan)</label>
+          <input type="text" id="settingPhone" class="form-input" placeholder="905551234567">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Web Sitesi / Link (QR için)</label>
+          <input type="text" id="settingWebsiteUrl" class="form-input" placeholder="https://berberim.onrender.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Dükkan Adresi</label>
+          <input type="text" id="settingAddress" class="form-input">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Instagram</label>
+          <input type="text" id="settingInstagram" class="form-input" placeholder="@goldmakas">
+        </div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          <div class="form-group" style="flex:1;min-width:120px;">
+            <label class="form-label">Açılış Saati</label>
+            <input type="time" id="settingOpenTime" class="form-input">
+          </div>
+          <div class="form-group" style="flex:1;min-width:120px;">
+            <label class="form-label">Kapanış Saati</label>
+            <input type="time" id="settingCloseTime" class="form-input">
+          </div>
+          <div class="form-group" style="flex:1;min-width:120px;">
+            <label class="form-label">Slot Süresi (Dk)</label>
+            <input type="number" id="settingSlotDuration" class="form-input" min="15" step="15">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Yeni PIN Kodu</label>
+          <input type="text" id="settingPin" class="form-input" maxlength="6" placeholder="0000">
+        </div>
+        <button type="submit" class="btn-whatsapp" style="width:100%;max-width:none;background:var(--gold);color:#000;">
+          💾 Ayarları Kaydet
+        </button>
+      </form>
+    </section>
+  </div>
+
+  <!-- HİZMET MODAL -->
+  <div id="serviceModal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="serviceModalTitle" class="modal-title">Hizmet Ekle</h3>
+        <button class="modal-close" id="btnCloseServiceModal">×</button>
+      </div>
+      <form id="serviceForm">
+        <input type="hidden" id="serviceId">
+        <div class="form-group"><label class="form-label">Hizmet Adı *</label><input type="text" id="srvName" class="form-input" required></div>
+        <div class="form-group"><label class="form-label">İkon (Emoji)</label><input type="text" id="srvIcon" class="form-input" value="✂️"></div>
+        <div style="display:flex;gap:10px;">
+          <div class="form-group" style="flex:1;"><label class="form-label">Fiyat (₺) *</label><input type="number" id="srvPrice" class="form-input" required min="0"></div>
+          <div class="form-group" style="flex:1;"><label class="form-label">Süre (Dk) *</label><input type="number" id="srvDuration" class="form-input" required min="5" step="5"></div>
+        </div>
+        <div class="form-group"><label class="form-label">Açıklama</label><input type="text" id="srvDesc" class="form-input"></div>
+        <button type="submit" class="btn-whatsapp" style="width:100%;max-width:none;background:var(--green);color:#fff;">Kaydet</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- PERSONEL MODAL -->
+  <div id="barberModal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="barberModalTitle" class="modal-title">Personel Ekle</h3>
+        <button class="modal-close" id="btnCloseBarberModal">×</button>
+      </div>
+      <form id="barberForm">
+        <input type="hidden" id="barberId">
+        <div class="form-group"><label class="form-label">Usta / Personel Adı *</label><input type="text" id="brbName" class="form-input" required></div>
+        <div class="form-group"><label class="form-label">Unvan *</label><input type="text" id="brbTitle" class="form-input" required placeholder="Baş Berber & Sakal Uzmanı"></div>
+        <div class="form-group"><label class="form-label">Profil Fotoğrafı URL</label><input type="url" id="brbAvatar" class="form-input" placeholder="https://..."></div>
+        <div style="display:flex;gap:10px;">
+          <div class="form-group" style="flex:1;"><label class="form-label">Açılış Saati</label><input type="time" id="brbOpenTime" class="form-input" value="09:00"></div>
+          <div class="form-group" style="flex:1;"><label class="form-label">Kapanış Saati</label><input type="time" id="brbCloseTime" class="form-input" value="21:00"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Çalışma Günleri</label>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;" id="brbDaysCheckboxes">
+            <label style="font-size:12px;display:flex;gap:4px;align-items:center;"><input type="checkbox" value="1" checked> Pzt</label>
+            <label style="font-size:12px;display:flex;gap:4px;align-items:center;"><input type="checkbox" value="2" checked> Sal</label>
+            <label style="font-size:12px;display:flex;gap:4px;align-items:center;"><input type="checkbox" value="3" checked> Çar</label>
+            <label style="font-size:12px;display:flex;gap:4px;align-items:center;"><input type="checkbox" value="4" checked> Per</label>
+            <label style="font-size:12px;display:flex;gap:4px;align-items:center;"><input type="checkbox" value="5" checked> Cum</label>
+            <label style="font-size:12px;display:flex;gap:4px;align-items:center;"><input type="checkbox" value="6" checked> Cmt</label>
+            <label style="font-size:12px;display:flex;gap:4px;align-items:center;"><input type="checkbox" value="0"> Paz</label>
+          </div>
+        </div>
+        <button type="submit" class="btn-whatsapp" style="width:100%;max-width:none;background:var(--green);color:#fff;">Kaydet</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+  <script src="admin.js"></script>
+</body>
+</html>
