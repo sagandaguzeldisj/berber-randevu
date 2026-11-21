@@ -3,24 +3,24 @@
 /* ======================================================== */
 
 :root {
-  --bg-deep: #06080c;
-  --bg-main: #0a0d14;
-  --bg-card: #111622;
-  --bg-card-hover: #161e2e;
-  --bg-input: #0c1018;
+  --bg-deep: #14110D;
+  --bg-main: #18140F;
+  --bg-card: #1E1914;
+  --bg-card-hover: #27211B;
+  --bg-input: #100D0A;
   
-  --gold-primary: #dfb15b;
-  --gold-light: #f5d78e;
-  --gold-dark: #b88d3b;
-  --gold-glow: rgba(223, 177, 91, 0.22);
-  --gold-border: rgba(223, 177, 91, 0.25);
+  --gold-primary: #C9A24B;
+  --gold-light: #EDE3CF;
+  --gold-dark: #A27D2B;
+  --gold-glow: rgba(201, 162, 75, 0.22);
+  --gold-border: rgba(201, 162, 75, 0.28);
   
-  --border-subtle: #1e2638;
-  --border-hover: rgba(223, 177, 91, 0.5);
+  --border-subtle: #2B231B;
+  --border-hover: rgba(201, 162, 75, 0.55);
   
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
+  --text-primary: #EDE3CF;
+  --text-secondary: #C2B6A3;
+  --text-muted: #8E8272;
   
   --green-wa: #25d366;
   --green-wa-hover: #20ba5a;
@@ -33,7 +33,7 @@
   --radius-lg: 20px;
   --radius-xl: 28px;
   
-  --font-serif: 'Cinzel', Georgia, serif;
+  --font-serif: 'Playfair Display', Georgia, serif;
   --font-sans: 'Plus Jakarta Sans', -apple-system, sans-serif;
 }
 
@@ -53,32 +53,35 @@ body {
   justify-content: center;
   padding-bottom: 90px;
   background-image: 
-    radial-gradient(circle at 50% 0%, rgba(223, 177, 91, 0.08) 0%, transparent 60%),
-    radial-gradient(circle at 100% 50%, rgba(21, 31, 50, 0.5) 0%, transparent 50%);
+    radial-gradient(ellipse 90% 60% at 50% -10%, rgba(201, 162, 75, 0.16) 0%, transparent 70%),
+    radial-gradient(circle at 0% 35%, rgba(201, 162, 75, 0.05) 0%, transparent 45%),
+    radial-gradient(circle at 100% 35%, rgba(201, 162, 75, 0.05) 0%, transparent 45%),
+    radial-gradient(circle at 50% 100%, rgba(16, 13, 10, 0.95) 0%, transparent 70%);
   background-attachment: fixed;
+  overflow-x: hidden;
 }
 
-/* Üst Berber Şerit Çubuğu (Vintage Berber Direği Esintisi) */
-.luxury-barber-ribbon {
+/* Yan Boşlukları Dolduran Zarif Ortam Işıkları */
+.ambient-glow {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 3px;
-  background: linear-gradient(90deg, 
-    #c53030 0%, #c53030 25%, 
-    #ffffff 25%, #ffffff 50%, 
-    #2b6cb0 50%, #2b6cb0 75%, 
-    var(--gold-primary) 75%, var(--gold-primary) 100%);
-  background-size: 80px 100%;
-  z-index: 999;
+  top: 15%;
+  width: 420px;
+  height: 650px;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(140px);
+  z-index: 0;
+  opacity: 0.35;
 }
+.glow-left { left: -140px; background: radial-gradient(circle, rgba(201, 162, 75, 0.3) 0%, transparent 70%); }
+.glow-right { right: -140px; background: radial-gradient(circle, rgba(201, 162, 75, 0.3) 0%, transparent 70%); }
 
 .app-container {
   width: 100%;
   max-width: 540px;
   min-height: 100vh;
   position: relative;
+  z-index: 1;
 }
 
 /* ======================================================== */
@@ -1311,20 +1314,21 @@ body {
 /* 💻 MASAÜSTÜ BESPOKE ATELIER DÜZENİ (>= 1024px) */
 @media (min-width: 1024px) {
   body {
-    padding: 40px 24px 60px;
+    padding: 30px 20px 60px;
     align-items: flex-start;
   }
 
   .app-container {
-    max-width: 1260px !important;
+    max-width: 1440px !important;
+    width: 95% !important;
     background: transparent !important;
     padding-bottom: 0 !important;
   }
 
   .desktop-layout {
     display: grid !important;
-    grid-template-columns: minmax(0, 1fr) 420px !important;
-    gap: 36px !important;
+    grid-template-columns: minmax(0, 1fr) 460px !important;
+    gap: 32px !important;
     align-items: start !important;
   }
 
@@ -1334,16 +1338,16 @@ body {
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-xl);
     overflow: hidden;
-    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.55);
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.65);
   }
 
   .shop-hero {
-    height: 260px;
+    height: 240px;
   }
 
   .shop-header {
-    padding: 0 36px 28px 36px;
-    margin-top: -65px;
+    padding: 0 32px 24px 32px;
+    margin-top: -60px;
   }
 
   .logo-wrapper {
@@ -1352,11 +1356,11 @@ body {
   }
 
   .shop-title h1 {
-    font-size: 28px;
+    font-size: 30px;
   }
 
   .section {
-    padding: 26px 36px;
+    padding: 22px 32px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.04);
   }
 
@@ -1364,19 +1368,19 @@ body {
     font-size: 19px;
   }
 
-  /* Hizmetleri Masaüstünde 2 Sütunlu Prestij Kartı Yap */
+  /* Hizmetleri Masaüstünde Kompakt 2/3 Sütunlu Yaparak Dikey Kaydırma Yükünü Kaldırıyoruz */
   .services-grid {
     display: grid !important;
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 16px !important;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
+    gap: 14px !important;
   }
 
   .service-card {
-    padding: 18px;
+    padding: 14px 16px;
   }
 
   .service-card:hover {
-    transform: translateY(-3px);
+    transform: translateY(-2px);
   }
 
   /* Saat Dilimleri 6 Sütun */
@@ -1386,15 +1390,15 @@ body {
   }
 
   .slot-btn {
-    padding: 12px 6px;
+    padding: 11px 6px;
     font-size: 14px;
     border-radius: 8px;
   }
 
-  /* SAĞ SİDEBAR (VIP TİCKET KARTI) */
+  /* SAĞ SİDEBAR (RANDEVU ÖZETİ KARTI) */
   .sidebar-column {
     position: sticky !important;
-    top: 30px !important;
+    top: 24px !important;
     z-index: 40;
   }
 
@@ -1403,7 +1407,7 @@ body {
     border: 1px solid var(--gold-border);
     border-radius: var(--radius-xl);
     padding: 26px;
-    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.65);
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.7);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
   }

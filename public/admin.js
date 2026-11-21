@@ -1,4 +1,6 @@
-// Berber Randevu Sistemi - Yönetim Paneli
+// Berber Randevu SaaS Platformu - Yönetim Paneli
+const urlParams = new URLSearchParams(window.location.search);
+const currentShop = urlParams.get('shop') || 'gold-makas';
 
 // Yatay kaydırma: Mouse tekerleği + sürükleme desteği
 function enableHScroll(el) {
@@ -44,7 +46,8 @@ function getAdminHeaders() {
   const token = sessionStorage.getItem('berber_admin_token') || '';
   return {
     'Content-Type': 'application/json',
-    'Authorization': `Bearer ${token}`
+    'Authorization': `Bearer ${token}`,
+    'x-shop-id': currentShop
   };
 }
 
@@ -53,8 +56,9 @@ btnLogin.addEventListener('click', async () => {
   const pin = inputPin.value.trim();
   try {
     const res = await fetch('/api/login', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pin })
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pin, shop: currentShop })
     });
     const result = await res.json();
     if (result.success && result.token) {
@@ -90,7 +94,7 @@ document.querySelectorAll('.admin-tab-btn').forEach(btn => {
 // --- VERİ YÜKLEME ---
 async function loadAdminData() {
   try {
-    const res = await fetch('/api/data');
+    const res = await fetch('/api/data?shop=' + encodeURIComponent(currentShop));
     if (!res.ok) throw new Error();
     adminData = await res.json();
     renderHeader();

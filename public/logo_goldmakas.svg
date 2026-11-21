@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 560" width="880" height="560">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&amp;family=Inter:wght@500&amp;display=swap');
+      .gold-text { font-family: 'Playfair Display', Georgia, serif; font-weight: 700; fill: #C9A24B; }
+      .cream-text { font-family: 'Inter', Arial, sans-serif; font-weight: 500; fill: #EDE3CF; }
+    </style>
+  </defs>
+  <rect width="880" height="560" fill="#14110D" rx="20"/>
+  <rect x="24" y="24" width="832" height="512" fill="none" stroke="#C9A24B" stroke-width="1.5" rx="12"/>
+  
+  <!-- Scissors Symbol -->
+  <g transform="translate(365, 60)">
+    <g stroke="#C9A24B" stroke-linecap="round" fill="none">
+      <line x1="90" y1="7.5" x2="62.5" y2="105" stroke-width="7.5"/>
+      <line x1="60" y1="7.5" x2="87.5" y2="105" stroke-width="7.5"/>
+      <circle cx="51.25" cy="122.5" r="16.25" stroke-width="5.5"/>
+      <circle cx="98.75" cy="122.5" r="16.25" stroke-width="5.5"/>
+    </g>
+    <circle cx="75" cy="61.25" r="5" fill="#14110D" stroke="#C9A24B" stroke-width="2.5"/>
+  </g>
+
+  <!-- Brand Name -->
+  <text x="440" y="325" text-anchor="middle" class="gold-text" font-size="74" letter-spacing="10">GOLD MAKAS</text>
+
+  <!-- Subtitle with side lines -->
+  <line x1="280" y1="380" x2="350" y2="380" stroke="#C9A24B" stroke-width="1.5"/>
+  <text x="440" y="385" text-anchor="middle" class="cream-text" font-size="15" letter-spacing="9">ERKEK KUAFÖRÜ</text>
+  <line x1="530" y1="380" x2="600" y2="380" stroke="#C9A24B" stroke-width="1.5"/>
+</svg>

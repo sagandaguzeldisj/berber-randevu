@@ -3,22 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>GOLD MAKAS | Atelier de Barbier • VIP Randevu Sistemi</title>
+  <title id="pageTitle">GOLD MAKAS • Randevu Sistemi</title>
   
   <!-- Lüks Tipografi -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   
   <link rel="stylesheet" href="styles.css">
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#07090e">
-  <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/2822/2822452.png">
+  <meta name="theme-color" content="#14110D">
+  <link rel="icon" href="/logo_square.svg">
 </head>
 <body>
 
-  <!-- Üst Lüks Berber İpi & Rozet Çubuğu -->
-  <div class="luxury-barber-ribbon"></div>
+  <!-- Ortam Işıklandırması (Geniş Ekranlar İçin Lüks Arka Plan) -->
+  <div class="ambient-glow glow-left"></div>
+  <div class="ambient-glow glow-right"></div>
 
   <div class="app-container">
     <div class="desktop-layout">
@@ -28,19 +29,19 @@
         
         <!-- Luxury Hero Banner -->
         <div id="shopHero" class="shop-hero" style="background-image: url('https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=1600&q=85');">
-          <div class="hero-vintage-badge">EST. 2014 • İSTANBUL</div>
+          <div class="hero-vintage-badge">ÖZEL RANDEVU SİSTEMİ</div>
         </div>
 
         <!-- Salon Profili & Prestij Başlığı -->
         <header class="shop-header">
           <div class="shop-profile">
             <div class="logo-wrapper">
-              <img id="shopLogo" class="shop-logo" src="https://cdn-icons-png.flaticon.com/512/2822/2822452.png" alt="Gold Makas Crest">
+              <img id="shopLogo" class="shop-logo" src="/logo_square.svg" alt="Gold Makas Logo">
               <div class="logo-gold-ring"></div>
             </div>
             <div class="shop-title">
               <div class="salon-pre-title">GELENEKSEL USTURA & MODERN STİL ATÖLYESİ</div>
-              <h1 id="shopName">GOLD MAKAS <span>✂️</span></h1>
+              <h1 id="shopName">GOLD MAKAS</h1>
               <p id="shopSlogan">"Her Tıraş Bir Zanaat, Her Müşteri Bir Beyefendi"</p>
             </div>
           </div>
@@ -49,7 +50,7 @@
           <div class="shop-meta">
             <span id="shopStatusBadge" class="badge badge-open">● Salon Açık</span>
             <span id="shopHoursBadge" class="badge">⏰ 09:00 - 21:00</span>
-            <span class="badge badge-vip">👑 VIP Hizmet Konsepti</span>
+            <span class="badge">⭐ Randevulu Hizmet</span>
             <span class="badge badge-rating">⭐ 4.9 <small>(520+ Yorum)</small></span>
             <a id="shopInstaLink" href="#" target="_blank" class="badge badge-link">📸 @goldmakas</a>
           </div>
@@ -71,7 +72,7 @@
               <span class="perk-icon">☕</span>
               <div>
                 <strong>İkram & Lounge</strong>
-                <span>Taze Kahve & Özel Kokteyl</span>
+                <span>Taze Kahve & Özel İçecek</span>
               </div>
             </div>
             <div class="perk-item">
@@ -164,10 +165,12 @@
           </section>
 
           <footer class="salon-footer">
-            <div class="footer-crest">✂️ GOLD MAKAS ✂️</div>
-            <p>© 2026 Gold Makas Atelier de Barbier • Özel WhatsApp Rezervasyon Sistemi</p>
+            <div class="footer-crest" id="footerShopName">GOLD MAKAS ERKEK KUAFÖRÜ</div>
+            <p>© 2026 Berber Randevu Platformu • Özel WhatsApp Rezervasyon Altyapısı</p>
             <div class="footer-links">
-              <a href="/admin.html">⚙️ Berber Yönetici Girişi</a>
+              <a href="/admin.html" id="footerAdminLink">⚙️ Berber Yönetici Girişi</a>
+              <span>•</span>
+              <a href="/super-admin.html" style="color:var(--gold-primary);">👑 Süper Patron Kokpiti</a>
               <span>•</span>
               <a href="#shopHero">Yukarı Çık ↑</a>
             </div>
@@ -175,20 +178,20 @@
         </div>
       </div>
 
-      <!-- SAĞ YAN KOLON: VIP RANDEVU KARTI (Concierge Pass) -->
+      <!-- SAĞ YAN KOLON: RANDEVU ÖZETİ (Concierge Card) -->
       <aside class="sidebar-column">
         <div class="sidebar-card">
           
-          <!-- Kartın Lüks Başlığı -->
+          <!-- Kartın Başlığı -->
           <div class="ticket-header">
             <div class="ticket-brand">
-              <span class="gold-icon">💈</span>
+              <span class="gold-icon">📋</span>
               <div>
-                <h4>VIP RANDEVU KARTI</h4>
-                <span>GOLD MAKAS ATELIER</span>
+                <h4>Randevu Özeti</h4>
+                <span id="ticketShopSubtitle">SEÇİLEN HİZMETLER</span>
               </div>
             </div>
-            <span class="ticket-badge">ANINDA REZERVASYON</span>
+            <span class="ticket-badge">REZERVASYON</span>
           </div>
 
           <!-- Perfore Çizgi -->
@@ -216,7 +219,7 @@
           <div class="section customer-form-section">
             <div class="form-title-wrap">
               <span class="step-tag-mini">05</span>
-              <h5>İletişim & Rezervasyon Sahibi</h5>
+              <h5>İletişim & Randevu Sahibi</h5>
             </div>
             
             <div class="form-group">
@@ -246,7 +249,7 @@
             </div>
             
             <button id="btnSubmitAppointment" class="btn-whatsapp" disabled>
-              <span class="btn-wa-icon">✂️</span>
+              <span class="btn-wa-icon">📱</span>
               <span class="btn-wa-text">Randevuyu WhatsApp ile Onayla</span>
             </button>
             
@@ -268,7 +271,7 @@
       <div class="success-card">
         <div class="success-icon-gold">✓</div>
         <h2 class="success-headline">Randevu Talebiniz Alındı!</h2>
-        <p class="success-sub">Randevunuz salona kaydedildi. Ustanın anında görmesi ve onaylaması için WhatsApp açılıyor...</p>
+        <p class="success-sub">Randevunuz salona iletildi. Ustanın anında görüp onaylaması için WhatsApp açılıyor...</p>
         
         <div id="receiptContent" class="summary-receipt"></div>
 

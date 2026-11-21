@@ -1,4 +1,6 @@
-// Berber Randevu Sistemi - Müşteri Arayüzü
+// Berber Randevu SaaS Platformu - Müşteri Arayüzü
+const urlParams = new URLSearchParams(window.location.search);
+const currentShop = urlParams.get('shop') || 'gold-makas';
 
 // Yatay kaydırma: Mouse tekerleği + dokunmatik sürükleme desteği
 function enableHScroll(el) {
@@ -77,7 +79,7 @@ function showToast(msg) {
 // Başlat
 async function init() {
   try {
-    const res = await fetch('/api/data');
+    const res = await fetch('/api/data?shop=' + encodeURIComponent(currentShop));
     if (!res.ok) throw new Error('Veri çekilemedi');
     appData = await res.json();
 
@@ -89,6 +91,10 @@ async function init() {
     // Yatay kaydırma aktif et
     enableHScroll(document.getElementById('barbersList'));
     enableHScroll(document.getElementById('datesList'));
+
+    // Footer admin linkini bu dükkana bağla
+    const footerAdmin = document.getElementById('footerAdminLink');
+    if (footerAdmin) footerAdmin.href = '/admin.html?shop=' + encodeURIComponent(currentShop);
 
     // Takvim picker bağla
     const calPicker = document.getElementById('calendarPicker');
@@ -134,9 +140,18 @@ async function init() {
 // Dükkan Bilgileri
 function renderShopInfo() {
   const shop = appData.shop || {};
-  if (shop.name) shopName.innerHTML = `${shop.name} <span>💈</span>`;
+  if (shop.name) {
+    shopName.textContent = shop.name;
+    document.title = `${shop.name} • Randevu Sistemi`;
+    const footerShop = document.getElementById('footerShopName');
+    if (footerShop) footerShop.textContent = shop.name;
+  }
   if (shop.slogan) shopSlogan.textContent = shop.slogan;
-  if (shop.logo) shopLogo.src = shop.logo;
+  if (shop.logo) {
+    shopLogo.src = shop.logo;
+    const fi = document.querySelector("link[rel*='icon']");
+    if (fi) fi.href = shop.logo;
+  }
   if (shop.coverImage) shopHero.style.backgroundImage = `url('${shop.coverImage}')`;
   if (shop.address) shopAddress.innerHTML = `📍 ${shop.address}`;
   if (shop.instagram) {
@@ -146,8 +161,17 @@ function renderShopInfo() {
   if (shop.openingTime && shop.closingTime) {
     shopHoursBadge.textContent = `⏰ ${shop.openingTime} - ${shop.closingTime}`;
   }
-  shopStatusBadge.className = shop.isOpen ? 'badge badge-open' : 'badge badge-closed';
-  shopStatusBadge.textContent = shop.isOpen ? '● Dükkan Açık' : '● Şuan Kapalı';
+
+  // Abonelik Durumu Kontrolü
+  if (appData.subscriptionStatus === 'suspended') {
+    shopStatusBadge.className = 'badge badge-closed';
+    shopStatusBadge.textContent = '● Randevuya Kapalı';
+    btnSubmitAppointment.disabled = true;
+    showToast('Bu salonun aboneliği şu anda aktif değildir.');
+  } else {
+    shopStatusBadge.className = shop.isOpen ? 'badge badge-open' : 'badge badge-closed';
+    shopStatusBadge.textContent = shop.isOpen ? '● Salon Açık' : '● Şuan Kapalı';
+  }
 }
 
 // Hizmetler
@@ -410,7 +434,7 @@ async function loadCustomerHistory() {
   const phone = custPhoneInput.value.trim().replace(/\D/g, '');
   if (phone.length < 10) return;
   try {
-    const res = await fetch(`/api/appointments/history/${phone}`);
+    const res = await fetch(`/api/appointments/history/${phone}?shop=` + encodeURIComponent(currentShop));
     if (!res.ok) return;
     const history = await res.json();
     if (history.length === 0) return;
@@ -455,6 +479,7 @@ btnSubmitAppointment.addEventListener('click', async () => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        shop: currentShop,
         customerName, customerPhone, customerNote,
         serviceIds: selection.serviceIds,
         barberId: selection.barberId,
