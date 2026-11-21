@@ -98,12 +98,32 @@ async function init() {
 
     // Takvim picker bağla
     const calPicker = document.getElementById('calendarPicker');
+    const btnTriggerCalendar = document.getElementById('btnTriggerCalendar');
     if (calPicker) {
       // Bugünden başlayıp 60 gün ileri
       const today = new Date();
       const maxDate = new Date(); maxDate.setDate(today.getDate() + 60);
       calPicker.min = today.toISOString().split('T')[0];
       calPicker.max = maxDate.toISOString().split('T')[0];
+
+      if (btnTriggerCalendar) {
+        btnTriggerCalendar.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          try {
+            if (typeof calPicker.showPicker === 'function') {
+              calPicker.showPicker();
+            } else {
+              calPicker.focus();
+              calPicker.click();
+            }
+          } catch (err) {
+            calPicker.focus();
+            calPicker.click();
+          }
+        });
+      }
+
       calPicker.addEventListener('change', () => {
         const picked = calPicker.value;
         if (!picked) return;
@@ -118,6 +138,10 @@ async function init() {
         }
         selection.date = picked;
         selection.time = '';
+        if (btnTriggerCalendar) {
+          const [py, pm, pd] = picked.split('-');
+          btnTriggerCalendar.textContent = `📅 ${pd}.${pm}.${py}`;
+        }
         renderDates();
         renderTimeSlots();
         updateSummary();
