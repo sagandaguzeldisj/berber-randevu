@@ -359,6 +359,42 @@ function updateSummary() {
   totalPriceDisplay.textContent = `${price} ₺`;
   totalDurationDisplay.textContent = `${dur} dk • ${sel.length} hizmet`;
 
+  // Masaüstü Canlı Önizleme Kutusu Güncelleme
+  const dtPreviewDateTime = document.getElementById('dtPreviewDateTime');
+  const dtPreviewBarber = document.getElementById('dtPreviewBarber');
+  const dtPreviewServices = document.getElementById('dtPreviewServices');
+
+  if (dtPreviewDateTime) {
+    if (selection.date && selection.time) {
+      const [y, m, d] = selection.date.split('-');
+      dtPreviewDateTime.textContent = `${d}.${m}.${y} — ${selection.time}`;
+      dtPreviewDateTime.style.color = 'var(--gold)';
+    } else if (selection.date) {
+      const [y, m, d] = selection.date.split('-');
+      dtPreviewDateTime.textContent = `${d}.${m}.${y} (Saat seçiniz)`;
+      dtPreviewDateTime.style.color = 'var(--text-secondary)';
+    } else {
+      dtPreviewDateTime.textContent = 'Tarih ve saat seçiniz';
+      dtPreviewDateTime.style.color = 'var(--text-muted)';
+    }
+  }
+
+  if (dtPreviewBarber) {
+    const barber = (appData.barbers || []).find(b => b.id === selection.barberId);
+    dtPreviewBarber.textContent = barber ? barber.name : 'Farketmez / İlk Müsait';
+    dtPreviewBarber.style.color = selection.barberId !== 'any' ? 'var(--gold)' : 'var(--text-primary)';
+  }
+
+  if (dtPreviewServices) {
+    if (sel.length === 0) {
+      dtPreviewServices.innerHTML = '<span style="color:var(--text-muted);font-size:12px;">Henüz hizmet seçilmedi</span>';
+    } else {
+      dtPreviewServices.innerHTML = sel.map(s => 
+        `<div class="preview-service-tag"><span>${s.name}</span><strong style="color:var(--gold);">${s.price} ₺</strong></div>`
+      ).join('');
+    }
+  }
+
   btnSubmitAppointment.disabled = !(
     sel.length > 0 && selection.date && selection.time &&
     custNameInput.value.trim().length >= 2 &&
