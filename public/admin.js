@@ -174,13 +174,11 @@ toggleOpenBtn.addEventListener('click', async () => {
 // --- FİLTRELER ---
 function setFilter(filter, btn) {
   currentFilter = filter;
-  ['filterAll','filterToday','filterPending'].forEach(id => {
+  ['filterAll', 'filterToday', 'filterPending'].forEach(id => {
     const el = document.getElementById(id);
-    el.style.background = 'var(--bg-input)';
-    el.style.color = 'var(--text-primary)';
+    if (el) el.classList.remove('active');
   });
-  btn.style.background = 'var(--gold)';
-  btn.style.color = '#000';
+  if (btn) btn.classList.add('active');
   renderAppointments();
 }
 document.getElementById('filterAll').addEventListener('click', e => setFilter('all', e.target));
