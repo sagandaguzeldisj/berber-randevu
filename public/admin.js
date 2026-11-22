@@ -104,6 +104,33 @@ async function loadAdminData() {
     }
     if (!res.ok) throw new Error();
     adminData = await res.json();
+
+    // Randevuları doğrudan garanti endpoint'ten de çek
+    try {
+      const appRes = await fetch('/api/appointments?shop=' + encodeURIComponent(currentShop), {
+        headers: getAdminHeaders()
+      });
+      if (appRes.ok) {
+        const appsList = await appRes.json();
+        if (Array.isArray(appsList)) {
+          adminData.appointments = appsList;
+        }
+      }
+    } catch (err) {}
+
+    // Hatırlatmaları da garanti endpoint'ten çek
+    try {
+      const remRes = await fetch('/api/reminders?shop=' + encodeURIComponent(currentShop), {
+        headers: getAdminHeaders()
+      });
+      if (remRes.ok) {
+        const remsList = await remRes.json();
+        if (Array.isArray(remsList)) {
+          adminData.reminders = remsList;
+        }
+      }
+    } catch (err) {}
+
     renderHeader();
     renderAppointments();
     renderReminders();
@@ -171,8 +198,14 @@ function renderAppointments() {
   else if (currentFilter === 'pending') apps = apps.filter(a => a.status === 'beklemede');
 
   if (apps.length === 0) {
-    appointmentsList.innerHTML = `<div style="text-align:center;padding:40px 20px;color:var(--text-muted);background:var(--bg-card);border-radius:var(--radius-md);border:1px solid var(--border-color);">
-      <div style="font-size:32px;margin-bottom:8px;">📅</div><p>Bu filtrede randevu yok.</p></div>`;
+    let emptyMsg = 'Henüz kayıtlı randevu bulunmuyor.';
+    if (currentFilter === 'today') {
+      emptyMsg = 'Bugün için randevu yok. Gelecek randevuları görmek için yukarıdaki "Tümü" veya "Bekleyenler" butonuna tıklayabilirsiniz.';
+    } else if (currentFilter === 'pending') {
+      emptyMsg = 'Onay bekleyen randevu yok.';
+    }
+    appointmentsList.innerHTML = `<div style="text-align:center;padding:40px 20px;color:var(--text-secondary);background:var(--bg-card);border-radius:var(--radius-md);border:1px solid var(--border-color);line-height:1.6;">
+      <div style="font-size:36px;margin-bottom:10px;">📅</div><p style="font-size:15px;font-weight:600;color:#fff;">${emptyMsg}</p></div>`;
     return;
   }
 
