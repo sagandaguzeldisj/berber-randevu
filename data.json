@@ -28,7 +28,7 @@
           "2026-10-29",
           "2026-11-19"
         ],
-        "websiteUrl": "http://localhost:5001",
+        "websiteUrl": "https://berber-randevu-p11w.onrender.com",
         "isOpen": true,
         "pin": "0000",
         "fullLogo": "/logo_goldmakas.svg"
@@ -425,7 +425,8 @@
         ],
         "holidays": [],
         "isOpen": true,
-        "pin": "1234"
+        "pin": "1234",
+        "websiteUrl": "https://berber-randevu-p11w.onrender.com"
       },
       "subscription": {
         "status": "active",
