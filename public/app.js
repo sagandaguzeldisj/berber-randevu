@@ -393,8 +393,14 @@ function renderTimeSlots() {
 
     const btn = document.createElement('button');
     btn.type = 'button';
-    btn.className = `slot-btn ${selection.time === timeStr ? 'selected' : ''}`;
+    const isSelected = selection.time === timeStr;
+    btn.className = `slot-btn ${isSelected ? 'selected' : ''}`;
     btn.textContent = timeStr;
+    if (isSelected) {
+      btn.style.backgroundColor = '#eab308';
+      btn.style.color = '#000000';
+      btn.style.fontWeight = '800';
+    }
     if (isPast || isBooked) {
       btn.disabled = true;
       btn.title = isBooked ? 'Dolu' : 'Geçmiş saat';

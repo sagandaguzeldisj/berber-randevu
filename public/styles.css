@@ -743,11 +743,15 @@ body {
 }
 
 .slot-btn {
+  -webkit-appearance: none;
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
   padding: 12px 6px;
-  background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
+  background-color: #141926 !important;
+  border: 1.5px solid #28334a !important;
   border-radius: var(--radius-sm);
-  color: var(--text-primary);
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
@@ -756,23 +760,31 @@ body {
 }
 
 .slot-btn:hover:not(:disabled) {
-  background: var(--bg-card-hover);
-  border-color: var(--gold-primary);
+  background-color: #1c2333 !important;
+  border-color: var(--gold-primary) !important;
 }
 
 .slot-btn.selected {
-  background: var(--gold-primary);
-  border-color: var(--gold-primary);
-  color: #06080c;
-  font-weight: 800;
-  box-shadow: 0 0 12px var(--gold-glow);
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  background: linear-gradient(135deg, #eab308, #ca8a04) !important;
+  background-color: #eab308 !important;
+  border-color: #fef08a !important;
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+  font-weight: 800 !important;
+  box-shadow: 0 4px 15px rgba(234, 179, 8, 0.5) !important;
 }
 
 .slot-btn:disabled {
-  opacity: 0.3;
-  background: #090c12;
-  border-color: #141a24;
-  color: var(--text-muted);
+  opacity: 0.35;
+  background-color: #0b0e14 !important;
+  border-color: #151b24 !important;
+  color: #64748b !important;
+  -webkit-text-fill-color: #64748b !important;
+  cursor: not-allowed;
+  text-decoration: line-through;
+}
   cursor: not-allowed;
   text-decoration: line-through;
 }
