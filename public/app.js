@@ -573,8 +573,9 @@ btnSubmitAppointment.addEventListener('click', async () => {
     const calLocation = encodeURIComponent(shop.address || '');
     btnGoogleCal.href = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${calTitle}&dates=${startDT}/${endDT}&details=${calDetails}&location=${calLocation}`;
 
-    // QR Kod
-    const siteUrl = shop.websiteUrl || window.location.origin;
+    // QR Kod — her zaman canlı URL'yi kullan
+    const origin = window.location.origin;
+    const siteUrl = (origin && !origin.includes('localhost')) ? origin : (shop.websiteUrl && !shop.websiteUrl.includes('localhost') ? shop.websiteUrl : origin);
     if (siteUrl && siteUrl.startsWith('http')) {
       qrCodeImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(siteUrl)}`;
       shareQR.style.display = 'block';

@@ -471,7 +471,7 @@ window.removeHoliday = async function(date) {
 
 // --- QR KOD ---
 window.generateQR = function() {
-  const url = document.getElementById('qrUrlInput').value.trim() || (adminData.shop || {}).websiteUrl || window.location.origin;
+  const url = document.getElementById('qrUrlInput').value.trim() || window.location.origin;
   if (!url) { showToast('Lütfen URL giriniz.'); return; }
   document.getElementById('adminQRImg').src = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(url)}`;
   document.getElementById('qrOutput').style.display = 'block';
@@ -550,9 +550,9 @@ function populateSettings() {
   document.getElementById('settingSlotDuration').value = shop.slotDuration || 30;
   document.getElementById('settingPin').value = shop.pin || '';
 
-  // QR URL'yi de doldur
+  // QR URL'yi canlı adresle doldur
   const qrInput = document.getElementById('qrUrlInput');
-  if (qrInput && shop.websiteUrl) qrInput.value = shop.websiteUrl;
+  if (qrInput) qrInput.value = window.location.origin;
 }
 
 document.getElementById('settingsForm').addEventListener('submit', async e => {
