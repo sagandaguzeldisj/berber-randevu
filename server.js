@@ -140,6 +140,12 @@ function checkSuperAdminAuth(req) {
 }
 
 const server = http.createServer(async (req, res) => {
+  // Temel Güvenlik Başlıkları
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-shop-id');
@@ -154,20 +160,38 @@ const server = http.createServer(async (req, res) => {
   // SÜPER ADMİN (PATRON) API ROTALARI
   // ==========================================
 
-  // POST /api/super-admin/login
+  // POST /api/super-admin/login (Brute-Force Korumalı)
   if (pathname === '/api/super-admin/login' && req.method === 'POST') {
+    const now = Date.now();
+    const attempt = loginAttempts.get(clientIp) || { count: 0, lockedUntil: 0 };
+    if (attempt.lockedUntil > now) {
+      const waitMinutes = Math.ceil((attempt.lockedUntil - now) / 60000);
+      res.writeHead(429, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: `Çok fazla hatalı deneme! Lütfen ${waitMinutes} dakika bekleyin.` }));
+      return;
+    }
+
     try {
       const { pin } = await readJsonBody(req);
       const data = loadData();
       const superPin = (data.superAdmin && data.superAdmin.pin) ? data.superAdmin.pin : '1923';
       if (String(pin).trim() === String(superPin).trim()) {
+        loginAttempts.delete(clientIp);
         const token = crypto.randomBytes(32).toString('hex');
         activeSessions.set(token, { role: 'superadmin' });
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ success: true, token }));
       } else {
+        attempt.count = (attempt.count || 0) + 1;
+        if (attempt.count >= 5) {
+          attempt.lockedUntil = now + 15 * 60 * 1000;
+        }
+        loginAttempts.set(clientIp, attempt);
         res.writeHead(401, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ success: false, error: 'Hatalı Süper PIN Kodu!' }));
+        res.end(JSON.stringify({
+          success: false,
+          error: attempt.count >= 5 ? '5 kez hatalı girdiniz, 15 dakika kilitlendi!' : `Hatalı Süper PIN! (${5 - attempt.count} hakkınız kaldı)`
+        }));
       }
     } catch (e) {
       res.writeHead(400); res.end(JSON.stringify({ error: 'Geçersiz istek' }));
@@ -334,7 +358,7 @@ const server = http.createServer(async (req, res) => {
   // BERBER / MÜŞTERİ MULTI-TENANT API'LERİ
   // ==========================================
 
-  // GET /api/data?shop=... (Herkese açık, PIN gizlenir)
+  // GET /api/data?shop=... (Müşteri için halka açık; Admin oturumu varsa tam veri döner)
   if (pathname === '/api/data' && req.method === 'GET') {
     const data = loadData();
     const shopEntry = getShopData(data, targetShopSlug);
@@ -344,15 +368,53 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
+    const isAdmin = checkAdminAuth(req, targetShopSlug);
     const safeShop = JSON.parse(JSON.stringify(shopEntry.shop || {}));
-    delete safeShop.pin;
+    if (!isAdmin) {
+      delete safeShop.pin;
+    }
 
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({
+    const responsePayload = {
       slug: shopEntry.slug || targetShopSlug,
       shop: safeShop,
       services: shopEntry.services || [],
       barbers: shopEntry.barbers || [],
+      subscriptionStatus: (shopEntry.subscription && shopEntry.subscription.status) || 'active'
+    };
+
+    if (isAdmin) {
+      responsePayload.appointments = shopEntry.appointments || [];
+      responsePayload.reminders = shopEntry.reminders || [];
+    }
+
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(responsePayload));
+    return;
+  }
+
+  // GET /api/admin/data?shop=... (Berber Paneli İçin Doğrudan Yetkili Veri)
+  if (pathname === '/api/admin/data' && req.method === 'GET') {
+    if (!checkAdminAuth(req, targetShopSlug)) {
+      res.writeHead(401, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Yetkisiz erişim. Lütfen giriş yapınız.' }));
+      return;
+    }
+    const data = loadData();
+    const shopEntry = getShopData(data, targetShopSlug);
+    if (!shopEntry) {
+      res.writeHead(404, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Berber dükkanı bulunamadı' }));
+      return;
+    }
+
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({
+      slug: shopEntry.slug || targetShopSlug,
+      shop: shopEntry.shop || {},
+      services: shopEntry.services || [],
+      barbers: shopEntry.barbers || [],
+      appointments: shopEntry.appointments || [],
+      reminders: shopEntry.reminders || [],
       subscriptionStatus: (shopEntry.subscription && shopEntry.subscription.status) || 'active'
     }));
     return;
@@ -734,30 +796,54 @@ const server = http.createServer(async (req, res) => {
   }
 
   // ==============================
-  // STATİK DOSYA SUNUCUSU (Akıllı Çok Katmanlı Güvenli Arama)
+  // STATİK DOSYA SUNUCUSU (Güvenli & Korumalı)
   // ==============================
-  let filePath = path.join(PUBLIC_DIR, pathname === '/' ? 'index.html' : pathname);
+  const baseName = path.basename(pathname).toLowerCase();
+  const rawExt = path.extname(pathname).toLowerCase();
+
+  // 1. Kritik Sistem ve Veritabanı Dosyalarını Engelle (Bilgi İfşasını Önleme)
+  const FORBIDDEN_FILES = ['data.json', 'server.js', 'package.json', 'package-lock.json'];
+  if (
+    FORBIDDEN_FILES.includes(baseName) ||
+    baseName.startsWith('.env') ||
+    baseName.startsWith('.git') ||
+    (rawExt === '.json' && baseName !== 'manifest.json')
+  ) {
+    res.writeHead(403, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ error: '403 - Bu dosyaya erişim engellendi.' }));
+    return;
+  }
+
+  // 2. Güvenli Yol Çözümleme (Path Traversal / Dizin Aşımı Koruması)
+  let safeRelPath = path.normalize(pathname).replace(/^(\.\.[\/\\])+/, '');
+  if (safeRelPath === '/' || safeRelPath === '\\') safeRelPath = 'index.html';
+  let filePath = path.join(PUBLIC_DIR, safeRelPath);
+
   if (!path.extname(filePath) && fs.existsSync(filePath + '.html')) filePath += '.html';
 
-  // Eğer dosya tam yolunda bulunamazsa (kullanıcı klasörsüz yüklemişse) akıllı arama yap:
+  // Eğer dosya tam yolunda bulunamazsa (kullanıcı klasörsüz yüklemişse) sadece public ve resimlerde ara:
   if (!fs.existsSync(filePath)) {
-    const baseName = path.basename(pathname);
     const inPublic = path.join(PUBLIC_DIR, baseName);
     const inHaircuts = path.join(PUBLIC_DIR, 'images', 'haircuts', baseName);
-    const inRoot = path.join(__dirname, baseName);
-    let altPath = path.join(__dirname, pathname === '/' ? 'index.html' : pathname);
-    if (!path.extname(altPath) && fs.existsSync(altPath + '.html')) altPath += '.html';
+    let altHtml = path.join(PUBLIC_DIR, baseName + '.html');
 
     if (fs.existsSync(inPublic)) filePath = inPublic;
     else if (fs.existsSync(inHaircuts)) filePath = inHaircuts;
-    else if (fs.existsSync(inRoot)) filePath = inRoot;
-    else if (fs.existsSync(altPath)) filePath = altPath;
+    else if (fs.existsSync(altHtml)) filePath = altHtml;
+  }
+
+  // Güvenlik doğrulaması: Sunulacak dosya PUBLIC_DIR sınırları içinde olmalıdır
+  const resolvedPath = path.resolve(filePath);
+  if (!resolvedPath.startsWith(path.resolve(PUBLIC_DIR))) {
+    res.writeHead(403, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ error: '403 - Yetkisiz dizin erişimi.' }));
+    return;
   }
 
   const ext = path.extname(filePath).toLowerCase();
   fs.readFile(filePath, (err, content) => {
     if (err) {
-      if (err.code === 'ENOENT') { res.writeHead(404); res.end('<h1>404 - Bulunamadı</h1>'); }
+      if (err.code === 'ENOENT') { res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8' }); res.end('<h1>404 - Bulunamadı</h1>'); }
       else { res.writeHead(500); res.end('Sunucu Hatası'); }
     } else {
       res.writeHead(200, { 'Content-Type': MIME_TYPES[ext] || 'application/octet-stream' });
