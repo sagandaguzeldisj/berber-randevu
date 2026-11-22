@@ -1518,3 +1518,65 @@ body {
     scrollbar-color: var(--gold-border) transparent;
   }
 }
+
+/* ======================================================== */
+/* 🛠️ YÖNETİM PANELİ (ADMİN) SEKMELER & FİLTRELER */
+/* ======================================================== */
+.admin-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px;
+  background: #0d111a !important;
+  border-bottom: 1px solid #232d42 !important;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.admin-tab-btn {
+  padding: 10px 16px !important;
+  background: #182032 !important;
+  border: 1.5px solid #2d3a52 !important;
+  border-radius: 8px !important;
+  color: #cbd5e1 !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+  transition: all 0.2s ease !important;
+}
+.admin-tab-btn:hover {
+  background: #222d44 !important;
+  color: #ffffff !important;
+  border-color: #3f5070 !important;
+}
+.admin-tab-btn.active {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+  border-color: #3b82f6 !important;
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  box-shadow: 0 4px 15px rgba(37, 99, 235, 0.45) !important;
+}
+
+/* Randevular Filtre Butonları (Tümü, Bugün, Bekleyenler) */
+.filter-btn, #filterAll, #filterToday, #filterPending {
+  padding: 8px 16px !important;
+  border-radius: 8px !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  border: 1.5px solid #2d3a52 !important;
+  background: #182032 !important;
+  color: #cbd5e1 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+.filter-btn:hover, #filterAll:hover, #filterToday:hover, #filterPending:hover {
+  background: #222d44 !important;
+  color: #ffffff !important;
+  border-color: #3f5070 !important;
+}
+.filter-btn.active, #filterAll.active, #filterToday.active, #filterPending.active {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+  border-color: #3b82f6 !important;
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4) !important;
+}
