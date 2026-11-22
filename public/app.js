@@ -596,7 +596,6 @@ btnSubmitAppointment.addEventListener('click', async () => {
       <div class="receipt-row"><span>Toplam Tutar</span><span>${app.totalPrice} ₺</span></div>`;
 
     successModal.classList.add('active');
-    setTimeout(() => window.open(waUrl, '_blank'), 400);
 
   } catch (err) {
     showToast('Sunucu hatası oluştu.');
