@@ -10,13 +10,13 @@
   <link rel="icon" href="/logo_square.svg">
   <style>
     :root {
-      --bg: #090b10;
-      --bg-card: #111520;
-      --bg-card-hover: #161b2a;
-      --gold: #C9A24B;
+      --bg: #0a0d14;
+      --bg-card: #141926;
+      --bg-card-hover: #1c2333;
+      --gold: #D4AF37;
       --gold-light: #f5d78e;
-      --gold-glow: rgba(201, 162, 75, 0.2);
-      --border: #1e2538;
+      --gold-glow: rgba(212, 175, 55, 0.28);
+      --border: #252e42;
       --text: #f8fafc;
       --text-muted: #94a3b8;
       --green: #22c55e;
@@ -28,7 +28,7 @@
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
-      background-image: radial-gradient(circle at 50% 0%, rgba(201, 162, 75, 0.12) 0%, transparent 60%);
+      background-image: radial-gradient(circle at 50% 0%, rgba(212, 175, 55, 0.14) 0%, transparent 60%);
       padding: 30px 20px 80px;
     }
     .container { max-width: 1280px; margin: 0 auto; }
@@ -36,31 +36,49 @@
     /* Giriş Ekranı */
     #loginView {
       max-width: 440px;
-      margin: 100px auto;
-      background: var(--bg-card);
-      border: 1px solid var(--gold);
+      margin: 80px auto;
+      background: linear-gradient(145deg, #161c2a, #0f1420);
+      border: 1.5px solid var(--gold);
       border-radius: 20px;
       padding: 40px;
       text-align: center;
-      box-shadow: 0 25px 60px rgba(0,0,0,0.7);
+      box-shadow: 0 25px 60px rgba(0,0,0,0.7), 0 0 30px rgba(212, 175, 55, 0.15);
     }
     .crown-icon { font-size: 48px; margin-bottom: 12px; display: inline-block; }
     h1 { font-family: 'Playfair Display', serif; color: var(--gold); margin-bottom: 8px; font-size: 26px; }
     p.sub { color: var(--text-muted); font-size: 14px; margin-bottom: 24px; }
     .input-group { margin-bottom: 20px; text-align: left; }
-    label { display: block; font-size: 13px; color: var(--text-muted); margin-bottom: 6px; font-weight: 600; }
+    label { display: block; font-size: 13px; color: #cbd5e1; margin-bottom: 8px; font-weight: 600; }
     input, select {
       width: 100%;
       padding: 13px 16px;
-      background: #06080c;
-      border: 1px solid var(--border);
-      color: #fff;
+      background: #182032;
+      border: 1.5px solid #2e3b52;
+      color: #ffffff;
       border-radius: 10px;
       font-size: 15px;
       outline: none;
       transition: 0.2s;
     }
-    input:focus, select:focus { border-color: var(--gold); box-shadow: 0 0 10px var(--gold-glow); }
+    input::placeholder { color: #8292a8; }
+    input:focus, select:focus {
+      border-color: var(--gold);
+      background: #1e283d;
+      box-shadow: 0 0 12px var(--gold-glow);
+    }
+    #superPinInput {
+      text-align: center;
+      letter-spacing: 4px;
+      font-size: 18px;
+      font-weight: 700;
+      color: #facc15;
+    }
+    #superPinInput::placeholder {
+      letter-spacing: normal;
+      font-size: 14px;
+      font-weight: normal;
+      color: #8292a8;
+    }
     .btn-gold {
       width: 100%;
       padding: 14px;
@@ -102,10 +120,10 @@
       align-items: center;
       gap: 6px;
     }
-    .btn-action-primary { background: var(--gold); color: #090b10; }
+    .btn-action-primary { background: var(--gold); color: #090b10; font-weight: 700; }
     .btn-action-primary:hover { background: var(--gold-light); }
-    .btn-action-outline { background: transparent; border: 1px solid var(--border); color: var(--text-muted); }
-    .btn-action-outline:hover { color: #fff; border-color: #fff; }
+    .btn-action-outline { background: #161c2b; border: 1px solid var(--border); color: #cbd5e1; }
+    .btn-action-outline:hover { color: #fff; border-color: var(--gold); }
 
     /* KPI Grid */
     .kpi-grid {
@@ -115,12 +133,13 @@
       margin-bottom: 35px;
     }
     .kpi-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
+      background: #141926;
+      border: 1.5px solid #232d42;
       border-radius: 16px;
       padding: 22px;
       position: relative;
       overflow: hidden;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
     }
     .kpi-card::before {
       content: "";
@@ -129,8 +148,8 @@
       height: 3px;
       background: linear-gradient(90deg, var(--gold), transparent);
     }
-    .kpi-title { font-size: 13px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
-    .kpi-value { font-size: 32px; font-weight: 800; color: #fff; margin: 8px 0 4px; }
+    .kpi-title { font-size: 13px; color: #cbd5e1; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+    .kpi-value { font-size: 34px; font-weight: 800; color: #ffffff; margin: 8px 0 4px; }
     .kpi-sub { font-size: 12px; color: var(--green); font-weight: 600; }
 
     /* Banner Bilgi */
@@ -348,7 +367,7 @@
 
       <div class="input-group">
         <label>Aylık Abonelik Tutarı (₺) *</label>
-        <input type="number" id="newShopFee" value="750">
+        <input type="number" id="newShopFee" value="750" style="color:#4ade80; font-weight:800; font-size:17px;">
       </div>
 
       <div class="modal-btns">
@@ -459,11 +478,19 @@
         loginView.style.display = 'none';
         dashboardView.style.display = 'block';
 
-        // Stats
+        // Stats - Parlak & Canlı Renkler
         document.getElementById('statTotalShops').textContent = data.totalShops || 0;
-        document.getElementById('statMonthlyRevenue').textContent = (data.totalMonthlyRevenue || 0).toLocaleString('tr-TR') + ' ₺';
-        document.getElementById('statActiveShops').textContent = data.activeShops || 0;
-        document.getElementById('statTotalAppointments').textContent = data.totalAppointments || 0;
+        const revEl = document.getElementById('statMonthlyRevenue');
+        revEl.textContent = (data.totalMonthlyRevenue || 0).toLocaleString('tr-TR') + ' ₺';
+        revEl.style.color = '#4ade80';
+
+        const actEl = document.getElementById('statActiveShops');
+        actEl.textContent = data.activeShops || 0;
+        actEl.style.color = '#60a5fa';
+
+        const appEl = document.getElementById('statTotalAppointments');
+        appEl.textContent = data.totalAppointments || 0;
+        appEl.style.color = '#facc15';
 
         // Render Table
         const tbody = document.getElementById('shopsTableBody');
@@ -477,20 +504,20 @@
               <div class="shop-meta-cell">
                 <img src="${s.logo || '/logo_square.svg'}" class="shop-avatar" onerror="this.src='/logo_square.svg'">
                 <div class="shop-name-wrap">
-                  <strong>${s.name}</strong>
-                  <span>Slug: ?shop=${s.slug}</span>
+                  <strong style="color:#ffffff; font-size:15px;">${s.name}</strong>
+                  <span style="color:#94a3b8;">Slug: ?shop=${s.slug}</span>
                 </div>
               </div>
             </td>
-            <td>+${s.phone || '-'}</td>
-            <td><code style="background:#000; padding:3px 6px; border-radius:4px; color:var(--gold);">${s.pin}</code></td>
-            <td><strong>${(s.monthlyFee || 750).toLocaleString('tr-TR')} ₺</strong> / ay</td>
+            <td><span style="color:#e2e8f0; font-weight:600;">+${s.phone || '-'}</span></td>
+            <td><code style="background:#1e2638; border:1px solid #3b4760; padding:4px 10px; border-radius:6px; color:#facc15; font-size:14px; font-weight:800; letter-spacing:1px;">${s.pin}</code></td>
+            <td><strong style="color:#4ade80; font-size:15px;">${(s.monthlyFee || 750).toLocaleString('tr-TR')} ₺</strong> <span style="color:#94a3b8; font-size:12px;">/ ay</span></td>
             <td>
               <span class="badge-status ${isAct ? 'active' : 'suspended'}">
                 ${isAct ? '● Aktif' : '✕ Askıda'}
               </span>
             </td>
-            <td>${s.appointmentCount || 0} randevu</td>
+            <td><span style="color:#60a5fa; font-weight:700; background:rgba(96,165,250,0.14); border:1px solid rgba(96,165,250,0.3); padding:4px 10px; border-radius:6px; display:inline-block;">${s.appointmentCount || 0} randevu</span></td>
             <td>
               <div class="action-links">
                 <a href="/?shop=${s.slug}" target="_blank" class="btn-sm" title="Müşteri Sitesini Gör">🌐 Müşteri Sitesi</a>

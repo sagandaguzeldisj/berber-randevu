@@ -94,7 +94,14 @@ document.querySelectorAll('.admin-tab-btn').forEach(btn => {
 // --- VERİ YÜKLEME ---
 async function loadAdminData() {
   try {
-    const res = await fetch('/api/data?shop=' + encodeURIComponent(currentShop));
+    let res = await fetch('/api/admin/data?shop=' + encodeURIComponent(currentShop), {
+      headers: getAdminHeaders()
+    });
+    if (!res.ok) {
+      res = await fetch('/api/data?shop=' + encodeURIComponent(currentShop), {
+        headers: getAdminHeaders()
+      });
+    }
     if (!res.ok) throw new Error();
     adminData = await res.json();
     renderHeader();
