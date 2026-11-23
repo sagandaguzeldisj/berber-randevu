@@ -425,13 +425,6 @@ const server = http.createServer(async (req, res) => {
     const now = Date.now();
     const attempt = loginAttempts.get(clientIp) || { count: 0, lockedUntil: 0 };
 
-    if (attempt.lockedUntil > now) {
-      const waitMinutes = Math.ceil((attempt.lockedUntil - now) / 60000);
-      res.writeHead(429, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: `Çok fazla hatalı deneme! Lütfen ${waitMinutes} dakika bekleyin.` }));
-      return;
-    }
-
     try {
       const body = await readJsonBody(req);
       const reqShopSlug = (body.shop || targetShopSlug).trim().toLowerCase();
@@ -444,9 +437,14 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
-      const expectedPin = (shopEntry.shop && shopEntry.shop.pin) ? shopEntry.shop.pin : '0000';
+      const storedPin = shopEntry.shop && shopEntry.shop.pin;
+      const expectedPin = (storedPin !== undefined && storedPin !== null && String(storedPin).trim() !== '')
+        ? String(storedPin).trim()
+        : '0000';
+      const submittedPin = String(body.pin || '').replace(/\s+/g, '');
 
-      if (String(body.pin).trim() === String(expectedPin).trim()) {
+      // Doğru PIN, önceki hatalı denemeler nedeniyle kilitlenmiş olsa bile giriş yapabilsin.
+      if (submittedPin === expectedPin) {
         loginAttempts.delete(clientIp);
         const token = crypto.randomBytes(32).toString('hex');
         activeSessions.set(token, { role: 'shop_admin', shopSlug: shopEntry.slug || reqShopSlug });
@@ -454,6 +452,12 @@ const server = http.createServer(async (req, res) => {
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ success: true, token, shopSlug: shopEntry.slug || reqShopSlug }));
       } else {
+        if (attempt.lockedUntil > now) {
+          const waitMinutes = Math.ceil((attempt.lockedUntil - now) / 60000);
+          res.writeHead(429, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: `Çok fazla hatalı deneme! Lütfen ${waitMinutes} dakika bekleyin.` }));
+          return;
+        }
         attempt.count += 1;
         if (attempt.count >= 5) {
           attempt.lockedUntil = now + 15 * 60 * 1000;
