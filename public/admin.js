@@ -317,6 +317,27 @@ window.openCancelModal = function(id) {
 
 function closeCancelModal() { document.getElementById('cancelModal').classList.remove('active'); }
 document.getElementById('btnCloseCancelModal').addEventListener('click', closeCancelModal);
+
+// İptal nedenini yazdıktan sonra, randevuyu iptal etmeden WhatsApp mesajını ayrıca gönderebilme.
+document.getElementById('btnSendCancelWhatsApp').addEventListener('click', () => {
+  const id = document.getElementById('cancelAppointmentId').value;
+  const reason = document.getElementById('cancelReasonInput').value.trim();
+  const app = (adminData.appointments || []).find(a => a.id === id);
+  if (!app) return;
+  if (!reason) {
+    showToast('Önce iptal nedenini yazın.');
+    document.getElementById('cancelReasonInput').focus();
+    return;
+  }
+  const url = buildWhatsAppUrl({ ...app, cancelReason: reason }, 'cancel');
+  if (!url) {
+    showToast('Müşterinin geçerli bir WhatsApp/telefon numarası bulunamadı.');
+    return;
+  }
+  window.open(url, '_blank');
+  document.getElementById('cancelWhatsAppCheck').checked = false;
+  showToast("WhatsApp mesajı açıldı. Göndermek için WhatsApp\'ta Gönder’e basın.");
+});
 document.getElementById('btnConfirmCancel').addEventListener('click', async () => {
   const id = document.getElementById('cancelAppointmentId').value;
   const reason = document.getElementById('cancelReasonInput').value.trim();
