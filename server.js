@@ -576,7 +576,24 @@ const server = http.createServer(async (req, res) => {
       const shopEntry = getShopData(data, targetShopSlug);
       const idx = ((shopEntry && shopEntry.appointments) || []).findIndex(a => a.id === id);
       if (idx === -1) { res.writeHead(404); res.end(JSON.stringify({ error: 'Bulunamadı' })); return; }
+      const allowedStatuses = ['beklemede', 'onaylandi', 'tamamlandi', 'iptal'];
+      if (body.status && !allowedStatuses.includes(body.status)) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Geçersiz randevu durumu' }));
+        return;
+      }
+
       if (body.status) shopEntry.appointments[idx].status = body.status;
+
+      // İptal nedeni ve bildirim bilgisi saklanır. Böylece müşteri geçmişinde
+      // ve yönetim panelinde iptalın nedeni görülebilir.
+      if (body.status === 'iptal') {
+        shopEntry.appointments[idx].cancelReason = sanitize(String(body.cancelReason || '').trim()).substring(0, 500);
+        shopEntry.appointments[idx].cancelledAt = new Date().toISOString();
+        shopEntry.appointments[idx].cancelledBy = 'shop_admin';
+        shopEntry.appointments[idx].whatsappNotifyRequested = body.whatsappNotify === true;
+      }
+
       saveData(data);
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ success: true, appointment: shopEntry.appointments[idx] }));
