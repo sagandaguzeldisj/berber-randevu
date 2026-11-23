@@ -88,35 +88,19 @@ function getShopSlug(req, parsedUrl) {
 }
 
 function getShopData(data, slug) {
-  // Tenant verisi kesinlikle başka bir dükkana düşmemeli.
-  // Bilinmeyen slug için Gold Makas/ilk dükkan fallback'i kullanma.
-  if (!data.shops || !slug) return null;
+  // Tenant izolasyonu: bulunamayan işletmeyi ASLA başka bir işletmeye yönlendirme.
+  if (!data || !data.shops || !slug) return null;
   return data.shops[String(slug).trim().toLowerCase()] || null;
 }
 
 function isCancelledAppointment(app) {
-  const status = String(app.status || '').trim().toLocaleLowerCase('tr-TR');
-  return ['iptal', 'iptal edildi', 'iptaledildi', 'cancelled', 'canceled', 'cancel', 'silindi', 'deleted'].includes(status);
+  const status = String(app && app.status || '').trim().toLowerCase();
+  return ['iptal', 'iptal edildi', 'cancelled', 'canceled', 'silindi'].includes(status);
 }
 
-function minutesFromTime(value) {
+function minutesOf(value) {
   const match = /^(\d{1,2}):(\d{2})$/.exec(String(value || ''));
-  if (!match) return NaN;
-  return Number(match[1]) * 60 + Number(match[2]);
-}
-
-function appointmentsOverlap(existing, date, time, barberId, duration) {
-  if (isCancelledAppointment(existing) || existing.date !== date) return false;
-  const requestedBarber = String(barberId || 'any');
-  const existingBarber = String(existing.barberId || 'any');
-  // Farklı ustalar birbirinin takvimini bloke etmez; "Farketmez" tüm ustalarla çakışır.
-  if (requestedBarber !== 'any' && existingBarber !== 'any' && requestedBarber !== existingBarber) return false;
-  const startA = minutesFromTime(time);
-  const startB = minutesFromTime(existing.time);
-  if (!Number.isFinite(startA) || !Number.isFinite(startB)) return false;
-  const endA = startA + Math.max(1, Number(duration) || 30);
-  const endB = startB + Math.max(1, Number(existing.totalDuration) || 30);
-  return startA < endB && startB < endA;
+  return match ? Number(match[1]) * 60 + Number(match[2]) : NaN;
 }
 
 function readJsonBody(req) {
@@ -286,7 +270,8 @@ const server = http.createServer(async (req, res) => {
         res.end(JSON.stringify({ error: 'Zorunlu alanlar eksik' }));
         return;
       }
-      const cleanSlug = slug.toLowerCase().replace(/[^a-z0-9-]/g, '-');
+      const cleanSlug = String(slug).trim().toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '');
+      if (!cleanSlug) { res.writeHead(400, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: 'Geçerli bir işletme kodu gerekli' })); return; }
       const data = loadData();
       if (data.shops[cleanSlug]) {
         res.writeHead(400, { 'Content-Type': 'application/json' });
@@ -367,10 +352,10 @@ const server = http.createServer(async (req, res) => {
         res.writeHead(404); res.end(JSON.stringify({ error: 'Berber bulunamadı' })); return;
       }
       data.shops[slug].subscription = data.shops[slug].subscription || {};
-      data.shops[slug].subscription.status = status;
+      data.shops[slug].subscription.status = status === 'active' ? 'active' : 'suspended';
       saveData(data);
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ success: true, status }));
+      res.end(JSON.stringify({ success: true, status: data.shops[slug].subscription.status }));
     } catch (e) {
       res.writeHead(400); res.end(JSON.stringify({ error: 'Hata' }));
     }
@@ -499,8 +484,9 @@ const server = http.createServer(async (req, res) => {
   if (pathname === '/api/appointments' && req.method === 'GET') {
     const data = loadData();
     const shopEntry = getShopData(data, targetShopSlug);
+    if (!shopEntry) { res.writeHead(404, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: 'İşletme bulunamadı' })); return; }
     res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify((shopEntry && shopEntry.appointments) || []));
+    res.end(JSON.stringify(shopEntry.appointments || []));
     return;
   }
 
@@ -509,7 +495,8 @@ const server = http.createServer(async (req, res) => {
     const phone = decodeURIComponent(pathname.replace('/api/appointments/history/', '')).replace(/\D/g, '');
     const data = loadData();
     const shopEntry = getShopData(data, targetShopSlug);
-    const history = ((shopEntry && shopEntry.appointments) || [])
+    if (!shopEntry) { res.writeHead(404, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: 'İşletme bulunamadı' })); return; }
+    const history = (shopEntry.appointments || [])
       .filter(a => (a.customerPhone || '').replace(/\D/g, '').includes(phone))
       .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -544,34 +531,39 @@ const server = http.createServer(async (req, res) => {
       const shopEntry = getShopData(data, reqShopSlug);
       if (!shopEntry) {
         res.writeHead(404, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: `Berber bulunamadı: ${reqShopSlug}. Lütfen doğru işletme bağlantısını kullanın.` })); return;
+        res.end(JSON.stringify({ error: 'İşletme bulunamadı. Doğru işletme bağlantısını kontrol edin.' })); return;
       }
 
       shopEntry.appointments = shopEntry.appointments || [];
-      if (!Array.isArray(serviceIds)) {
+      const selectedServices = (shopEntry.services || []).filter(service => (serviceIds || []).map(String).includes(String(service.id)));
+      if (!selectedServices.length || selectedServices.length !== serviceIds.length) {
         res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Hizmet seçimi geçersiz.' })); return;
+        res.end(JSON.stringify({ error: 'Seçilen hizmet bulunamadı.' })); return;
       }
-
-      const selectedServices = (shopEntry.services || []).filter(s => serviceIds.map(String).includes(String(s.id)));
-      if (!selectedServices.length) {
-        res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Seçilen hizmet bu işletmede bulunamadı.' })); return;
-      }
-      const totalPrice = selectedServices.reduce((s, x) => s + (Number(x.price) || 0), 0);
-      const totalDuration = selectedServices.reduce((s, x) => s + (Number(x.duration) || 0), 0);
-      const conflict = shopEntry.appointments.some(app =>
-        appointmentsOverlap(app, date, time, barberId, totalDuration)
-      );
+      const totalDuration = selectedServices.reduce((sum, service) => sum + (Number(service.duration) || 0), 0);
+      const requestedStart = minutesOf(time);
+      const requestedEnd = requestedStart + Math.max(totalDuration, 1);
+      const requestedBarber = String(barberId || 'any');
+      const conflict = shopEntry.appointments.some(app => {
+        if (isCancelledAppointment(app) || app.date !== date) return false;
+        const existingStart = minutesOf(app.time);
+        const existingDuration = Number(app.totalDuration) ||
+          (Array.isArray(app.services) ? app.services.reduce((sum, service) => sum + (Number(service.duration) || 0), 0) : 0) || 30;
+        const existingEnd = existingStart + existingDuration;
+        const existingBarber = String(app.barberId || 'any');
+        const sameBarber = existingBarber === requestedBarber || requestedBarber === 'any' || existingBarber === 'any';
+        return sameBarber && Number.isFinite(requestedStart) && Number.isFinite(existingStart) && requestedStart < existingEnd && existingStart < requestedEnd;
+      });
       if (conflict) {
         res.writeHead(409, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Seçtiğiniz usta bu saat aralığında başka bir randevuya sahip. Lütfen başka saat seçiniz.' })); return;
+        res.end(JSON.stringify({ error: 'Bu usta seçilen saat aralığında dolu. Lütfen başka saat seçiniz.' })); return;
       }
+
+      const totalPrice = selectedServices.reduce((sum, service) => sum + (Number(service.price) || 0), 0);
       const selectedBarber = (shopEntry.barbers || []).find(b => b.id === barberId) || { id: 'any', name: 'Farketmez' };
 
       const app = {
         id: 'RND-' + crypto.randomUUID(),
-        shopSlug: reqShopSlug,
         customerName: sanitize(customerName.trim()).substring(0, 50),
         customerPhone: sanitize(customerPhone.trim()).substring(0, 20),
         customerNote: sanitize((customerNote || '').trim()).substring(0, 200),
@@ -585,11 +577,7 @@ const server = http.createServer(async (req, res) => {
       };
 
       shopEntry.appointments.unshift(app);
-      if (!saveData(data)) {
-        shopEntry.appointments.shift();
-        res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Randevu kaydedilemedi. Lütfen tekrar deneyin.' })); return;
-      }
+      saveData(data);
       res.writeHead(201, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ success: true, appointment: app }));
     } catch (e) { res.writeHead(400); res.end(JSON.stringify({ error: 'Geçersiz veri' })); }
