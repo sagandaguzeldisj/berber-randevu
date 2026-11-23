@@ -88,12 +88,35 @@ function getShopSlug(req, parsedUrl) {
 }
 
 function getShopData(data, slug) {
-  if (!data.shops) data.shops = {};
-  if (data.shops[slug]) return data.shops[slug];
-  if (data.shops['gold-makas']) return data.shops['gold-makas'];
-  const firstKey = Object.keys(data.shops)[0];
-  if (firstKey) return data.shops[firstKey];
-  return null;
+  // Tenant verisi kesinlikle başka bir dükkana düşmemeli.
+  // Bilinmeyen slug için Gold Makas/ilk dükkan fallback'i kullanma.
+  if (!data.shops || !slug) return null;
+  return data.shops[String(slug).trim().toLowerCase()] || null;
+}
+
+function isCancelledAppointment(app) {
+  const status = String(app.status || '').trim().toLocaleLowerCase('tr-TR');
+  return ['iptal', 'iptal edildi', 'iptaledildi', 'cancelled', 'canceled', 'cancel', 'silindi', 'deleted'].includes(status);
+}
+
+function minutesFromTime(value) {
+  const match = /^(\d{1,2}):(\d{2})$/.exec(String(value || ''));
+  if (!match) return NaN;
+  return Number(match[1]) * 60 + Number(match[2]);
+}
+
+function appointmentsOverlap(existing, date, time, barberId, duration) {
+  if (isCancelledAppointment(existing) || existing.date !== date) return false;
+  const requestedBarber = String(barberId || 'any');
+  const existingBarber = String(existing.barberId || 'any');
+  // Farklı ustalar birbirinin takvimini bloke etmez; "Farketmez" tüm ustalarla çakışır.
+  if (requestedBarber !== 'any' && existingBarber !== 'any' && requestedBarber !== existingBarber) return false;
+  const startA = minutesFromTime(time);
+  const startB = minutesFromTime(existing.time);
+  if (!Number.isFinite(startA) || !Number.isFinite(startB)) return false;
+  const endA = startA + Math.max(1, Number(duration) || 30);
+  const endB = startB + Math.max(1, Number(existing.totalDuration) || 30);
+  return startA < endB && startB < endA;
 }
 
 function readJsonBody(req) {
@@ -425,6 +448,13 @@ const server = http.createServer(async (req, res) => {
     const now = Date.now();
     const attempt = loginAttempts.get(clientIp) || { count: 0, lockedUntil: 0 };
 
+    if (attempt.lockedUntil > now) {
+      const waitMinutes = Math.ceil((attempt.lockedUntil - now) / 60000);
+      res.writeHead(429, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: `Çok fazla hatalı deneme! Lütfen ${waitMinutes} dakika bekleyin.` }));
+      return;
+    }
+
     try {
       const body = await readJsonBody(req);
       const reqShopSlug = (body.shop || targetShopSlug).trim().toLowerCase();
@@ -437,14 +467,9 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
-      const storedPin = shopEntry.shop && shopEntry.shop.pin;
-      const expectedPin = (storedPin !== undefined && storedPin !== null && String(storedPin).trim() !== '')
-        ? String(storedPin).trim()
-        : '0000';
-      const submittedPin = String(body.pin || '').replace(/\s+/g, '');
+      const expectedPin = (shopEntry.shop && shopEntry.shop.pin) ? shopEntry.shop.pin : '0000';
 
-      // Doğru PIN, önceki hatalı denemeler nedeniyle kilitlenmiş olsa bile giriş yapabilsin.
-      if (submittedPin === expectedPin) {
+      if (String(body.pin).trim() === String(expectedPin).trim()) {
         loginAttempts.delete(clientIp);
         const token = crypto.randomBytes(32).toString('hex');
         activeSessions.set(token, { role: 'shop_admin', shopSlug: shopEntry.slug || reqShopSlug });
@@ -452,12 +477,6 @@ const server = http.createServer(async (req, res) => {
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ success: true, token, shopSlug: shopEntry.slug || reqShopSlug }));
       } else {
-        if (attempt.lockedUntil > now) {
-          const waitMinutes = Math.ceil((attempt.lockedUntil - now) / 60000);
-          res.writeHead(429, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ error: `Çok fazla hatalı deneme! Lütfen ${waitMinutes} dakika bekleyin.` }));
-          return;
-        }
         attempt.count += 1;
         if (attempt.count >= 5) {
           attempt.lockedUntil = now + 15 * 60 * 1000;
@@ -525,27 +544,34 @@ const server = http.createServer(async (req, res) => {
       const shopEntry = getShopData(data, reqShopSlug);
       if (!shopEntry) {
         res.writeHead(404, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Berber bulunamadı' })); return;
+        res.end(JSON.stringify({ error: `Berber bulunamadı: ${reqShopSlug}. Lütfen doğru işletme bağlantısını kullanın.` })); return;
       }
 
       shopEntry.appointments = shopEntry.appointments || [];
+      if (!Array.isArray(serviceIds)) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Hizmet seçimi geçersiz.' })); return;
+      }
 
+      const selectedServices = (shopEntry.services || []).filter(s => serviceIds.map(String).includes(String(s.id)));
+      if (!selectedServices.length) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Seçilen hizmet bu işletmede bulunamadı.' })); return;
+      }
+      const totalPrice = selectedServices.reduce((s, x) => s + (Number(x.price) || 0), 0);
+      const totalDuration = selectedServices.reduce((s, x) => s + (Number(x.duration) || 0), 0);
       const conflict = shopEntry.appointments.some(app =>
-        app.status !== 'iptal' && app.date === date && app.time === time &&
-        (app.barberId === barberId || barberId === 'any' || app.barberId === 'any')
+        appointmentsOverlap(app, date, time, barberId, totalDuration)
       );
       if (conflict) {
         res.writeHead(409, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Bu saat dilimi dolu. Lütfen başka saat seçiniz.' })); return;
+        res.end(JSON.stringify({ error: 'Seçtiğiniz usta bu saat aralığında başka bir randevuya sahip. Lütfen başka saat seçiniz.' })); return;
       }
-
-      const selectedServices = (shopEntry.services || []).filter(s => serviceIds.includes(s.id));
-      const totalPrice = selectedServices.reduce((s, x) => s + (Number(x.price) || 0), 0);
-      const totalDuration = selectedServices.reduce((s, x) => s + (Number(x.duration) || 0), 0);
       const selectedBarber = (shopEntry.barbers || []).find(b => b.id === barberId) || { id: 'any', name: 'Farketmez' };
 
       const app = {
-        id: 'RND-' + Math.floor(1000 + Math.random() * 9000),
+        id: 'RND-' + crypto.randomUUID(),
+        shopSlug: reqShopSlug,
         customerName: sanitize(customerName.trim()).substring(0, 50),
         customerPhone: sanitize(customerPhone.trim()).substring(0, 20),
         customerNote: sanitize((customerNote || '').trim()).substring(0, 200),
@@ -559,7 +585,11 @@ const server = http.createServer(async (req, res) => {
       };
 
       shopEntry.appointments.unshift(app);
-      saveData(data);
+      if (!saveData(data)) {
+        shopEntry.appointments.shift();
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Randevu kaydedilemedi. Lütfen tekrar deneyin.' })); return;
+      }
       res.writeHead(201, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ success: true, appointment: app }));
     } catch (e) { res.writeHead(400); res.end(JSON.stringify({ error: 'Geçersiz veri' })); }
@@ -580,24 +610,7 @@ const server = http.createServer(async (req, res) => {
       const shopEntry = getShopData(data, targetShopSlug);
       const idx = ((shopEntry && shopEntry.appointments) || []).findIndex(a => a.id === id);
       if (idx === -1) { res.writeHead(404); res.end(JSON.stringify({ error: 'Bulunamadı' })); return; }
-      const allowedStatuses = ['beklemede', 'onaylandi', 'tamamlandi', 'iptal'];
-      if (body.status && !allowedStatuses.includes(body.status)) {
-        res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Geçersiz randevu durumu' }));
-        return;
-      }
-
       if (body.status) shopEntry.appointments[idx].status = body.status;
-
-      // İptal nedeni ve bildirim bilgisi saklanır. Böylece müşteri geçmişinde
-      // ve yönetim panelinde iptalın nedeni görülebilir.
-      if (body.status === 'iptal') {
-        shopEntry.appointments[idx].cancelReason = sanitize(String(body.cancelReason || '').trim()).substring(0, 500);
-        shopEntry.appointments[idx].cancelledAt = new Date().toISOString();
-        shopEntry.appointments[idx].cancelledBy = 'shop_admin';
-        shopEntry.appointments[idx].whatsappNotifyRequested = body.whatsappNotify === true;
-      }
-
       saveData(data);
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ success: true, appointment: shopEntry.appointments[idx] }));
