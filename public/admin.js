@@ -132,7 +132,6 @@ async function loadAdminData() {
     } catch (err) {}
 
     renderHeader();
-    renderDashboard();
     renderAppointments();
     renderReminders();
     renderAdminServices();
@@ -212,36 +211,6 @@ function buildWhatsAppUrl(app, type = 'confirm') {
   return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
 }
 
-function renderDashboard() {
-  const apps = [...(adminData.appointments || [])];
-  const now = new Date();
-  const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
-  const today = apps.filter(a => a.date === todayStr);
-  const activeToday = today.filter(a => a.status !== 'iptal');
-  const revenue = activeToday.reduce((sum, a) => sum + (Number(a.totalPrice) || 0), 0);
-  const pending = apps.filter(a => a.status === 'beklemede').length;
-  const cancelled = today.filter(a => a.status === 'iptal').length;
-  const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
-  set('dashTodayCount', activeToday.length);
-  set('dashTodayRevenue', `${revenue.toLocaleString('tr-TR')} ₺`);
-  set('dashPendingCount', pending);
-  set('dashCancelledCount', cancelled);
-
-  const timeline = document.getElementById('todayTimeline');
-  if (!timeline) return;
-  const ordered = today.filter(a => a.status !== 'iptal').sort((a,b) => String(a.time).localeCompare(String(b.time)));
-  if (!ordered.length) {
-    timeline.innerHTML = `<div style="text-align:center;color:var(--text-muted);padding:18px 8px;font-size:12px;">Bugün için aktif randevu yok.</div>`;
-    return;
-  }
-  timeline.innerHTML = `<div style="font-size:12px;font-weight:800;margin-bottom:4px;color:var(--text-secondary);">BUGÜNÜN AKIŞI</div>` + ordered.map(a => `
-    <div class="today-item">
-      <div class="today-time">${escapeHtml(a.time)}</div>
-      <div><div class="today-name">${escapeHtml(a.customerName)}</div><div class="today-meta">${escapeHtml(a.barberName)} • ${(a.services||[]).map(s=>escapeHtml(s.name)).join(', ')}</div></div>
-      <div class="today-status"><span class="app-badge badge-${escapeHtml(a.status || 'beklemede')}">${escapeHtml(a.status || 'beklemede')}</span></div>
-    </div>`).join('');
-}
-
 function renderAppointments() {
   appointmentsList.innerHTML = '';
   const now = new Date();
@@ -294,7 +263,7 @@ function renderAppointments() {
 window.updateStatus = async function(id, status) {
   if (status === 'iptal') { openCancelModal(id); return; }
   try {
-    const res = await fetch(`/api/appointments/${id}`, {
+    const res = await fetch(`/api/appointments/${encodeURIComponent(id)}?shop=${encodeURIComponent(currentShop)}`, {
       method: 'PUT', headers: getAdminHeaders(),
       body: JSON.stringify({ status })
     });
@@ -318,26 +287,25 @@ window.openCancelModal = function(id) {
 function closeCancelModal() { document.getElementById('cancelModal').classList.remove('active'); }
 document.getElementById('btnCloseCancelModal').addEventListener('click', closeCancelModal);
 
-// İptal nedenini yazdıktan sonra, randevuyu iptal etmeden WhatsApp mesajını ayrıca gönderebilme.
-document.getElementById('btnSendCancelWhatsApp').addEventListener('click', () => {
-  const id = document.getElementById('cancelAppointmentId').value;
-  const reason = document.getElementById('cancelReasonInput').value.trim();
-  const app = (adminData.appointments || []).find(a => a.id === id);
-  if (!app) return;
-  if (!reason) {
-    showToast('Önce iptal nedenini yazın.');
-    document.getElementById('cancelReasonInput').focus();
-    return;
-  }
-  const url = buildWhatsAppUrl({ ...app, cancelReason: reason }, 'cancel');
-  if (!url) {
-    showToast('Müşterinin geçerli bir WhatsApp/telefon numarası bulunamadı.');
-    return;
-  }
-  window.open(url, '_blank');
-  document.getElementById('cancelWhatsAppCheck').checked = false;
-  showToast("WhatsApp mesajı açıldı. Göndermek için WhatsApp\'ta Gönder’e basın.");
-});
+// İptal nedenini yazdıktan sonra randevuyu iptal etmeden WhatsApp mesajını aç.
+const btnSendCancelWhatsApp = document.getElementById('btnSendCancelWhatsApp');
+if (btnSendCancelWhatsApp) {
+  btnSendCancelWhatsApp.addEventListener('click', () => {
+    const id = document.getElementById('cancelAppointmentId').value;
+    const reason = document.getElementById('cancelReasonInput').value.trim();
+    const app = (adminData.appointments || []).find(a => a.id === id);
+    if (!app) { showToast('Randevu bulunamadı.'); return; }
+    if (!reason) {
+      showToast('Önce iptal nedenini yazın.');
+      document.getElementById('cancelReasonInput').focus();
+      return;
+    }
+    const url = buildWhatsAppUrl({ ...app, cancelReason: reason }, 'cancel');
+    if (!url) { showToast('Müşterinin geçerli bir telefon/WhatsApp numarası bulunamadı.'); return; }
+    window.open(url, '_blank', 'noopener,noreferrer');
+    showToast("WhatsApp açıldı. Mesajı göndermek için WhatsApp'ta Gönder'e basın.");
+  });
+}
 document.getElementById('btnConfirmCancel').addEventListener('click', async () => {
   const id = document.getElementById('cancelAppointmentId').value;
   const reason = document.getElementById('cancelReasonInput').value.trim();
@@ -351,7 +319,7 @@ document.getElementById('btnConfirmCancel').addEventListener('click', async () =
   const btn = document.getElementById('btnConfirmCancel');
   btn.disabled = true;
   try {
-    const res = await fetch(`/api/appointments/${id}`, {
+    const res = await fetch(`/api/appointments/${encodeURIComponent(id)}?shop=${encodeURIComponent(currentShop)}`, {
       method: 'PUT', headers: getAdminHeaders(),
       body: JSON.stringify({ status: 'iptal', cancelReason: reason, whatsappNotify: notify })
     });
@@ -379,54 +347,18 @@ document.getElementById('btnConfirmCancel').addEventListener('click', async () =
 document.getElementById('cancelModal').addEventListener('click', e => { if (e.target.id === 'cancelModal') closeCancelModal(); });
 
 window.deleteAppointment = async function(id) {
-  if (!confirm('Bu randevuyu silmek istiyor musunuz?')) return;
+  if (!confirm('Bu randevuyu kalıcı olarak silmek istiyor musunuz?')) return;
   try {
-    const res = await fetch(`/api/appointments/${id}`, { method: 'DELETE', headers: getAdminHeaders() });
-    if (res.ok) { showToast('Silindi.'); loadAdminData(); }
-  } catch (e) { showToast('Hata'); }
+    const res = await fetch(`/api/appointments/${encodeURIComponent(id)}?shop=${encodeURIComponent(currentShop)}`, {
+      method: 'DELETE', headers: getAdminHeaders()
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) { showToast(data.error || 'Randevu silinemedi.'); return; }
+    showToast('Randevu silindi.');
+    await loadAdminData();
+  } catch (e) { showToast('Sunucuya bağlanılamadı.'); }
 };
 
-
-// --- HIZLI RANDEVU ---
-function populateQuickAppointmentForm() {
-  const serviceSel = document.getElementById('quickService');
-  const barberSel = document.getElementById('quickBarber');
-  if (!serviceSel || !barberSel) return;
-  serviceSel.innerHTML = (adminData.services || []).filter(s => s.isAvailable !== false).map(s => `<option value="${escapeHtml(s.id)}">${escapeHtml(s.name)} — ${escapeHtml(s.price)} ₺ / ${escapeHtml(s.duration)} dk</option>`).join('');
-  barberSel.innerHTML = (adminData.barbers || []).map(b => `<option value="${escapeHtml(b.id)}">${escapeHtml(b.name)}</option>`).join('');
-  const now = new Date();
-  document.getElementById('quickDate').value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
-}
-
-document.getElementById('btnQuickAppointment').addEventListener('click', () => {
-  populateQuickAppointmentForm();
-  document.getElementById('quickAppointmentModal').classList.add('active');
-});
-document.getElementById('btnCloseQuickModal').addEventListener('click', () => document.getElementById('quickAppointmentModal').classList.remove('active'));
-document.getElementById('quickAppointmentModal').addEventListener('click', e => { if (e.target.id === 'quickAppointmentModal') e.currentTarget.classList.remove('active'); });
-document.getElementById('quickAppointmentForm').addEventListener('submit', async e => {
-  e.preventDefault();
-  const serviceIds = [document.getElementById('quickService').value];
-  const payload = {
-    shop: currentShop,
-    customerName: document.getElementById('quickName').value.trim(),
-    customerPhone: document.getElementById('quickPhone').value.trim(),
-    customerNote: document.getElementById('quickNote').value.trim(),
-    serviceIds,
-    barberId: document.getElementById('quickBarber').value,
-    date: document.getElementById('quickDate').value,
-    time: document.getElementById('quickTime').value
-  };
-  try {
-    const res = await fetch('/api/appointments', { method:'POST', headers:getAdminHeaders(), body:JSON.stringify(payload) });
-    const data = await res.json().catch(()=>({}));
-    if (!res.ok) { showToast(data.error || 'Randevu oluşturulamadı'); return; }
-    document.getElementById('quickAppointmentForm').reset();
-    document.getElementById('quickAppointmentModal').classList.remove('active');
-    showToast('Hızlı randevu oluşturuldu.');
-    loadAdminData();
-  } catch (err) { showToast('Sunucu hatası'); }
-});
 
 // --- HATIRLATMALAR ---
 function renderReminders() {

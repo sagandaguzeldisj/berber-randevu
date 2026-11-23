@@ -110,18 +110,7 @@
 
     <!-- TAB: RANDEVULAR -->
     <main id="appointmentsTab" class="tab-content active">
-      <div class="admin-dashboard">
-        <div class="dash-card gold"><div class="dash-label">Bugünkü Randevu</div><div id="dashTodayCount" class="dash-value">0</div><div class="dash-sub">Toplam program</div></div>
-        <div class="dash-card green"><div class="dash-label">Bugünkü Ciro</div><div id="dashTodayRevenue" class="dash-value">0 ₺</div><div class="dash-sub">Randevu toplamı</div></div>
-        <div class="dash-card blue"><div class="dash-label">Onay Bekleyen</div><div id="dashPendingCount" class="dash-value">0</div><div class="dash-sub">Hızlıca kontrol et</div></div>
-        <div class="dash-card red"><div class="dash-label">Bugün İptal</div><div id="dashCancelledCount" class="dash-value">0</div><div class="dash-sub">İptal edilenler</div></div>
-      </div>
-      <div class="quick-row">
-        <div><div style="font-size:16px;font-weight:700;">Bugünün Akışı</div><div class="quick-title">Berber koltuğundaki günü tek ekranda takip et.</div></div>
-        <button id="btnQuickAppointment" class="btn-action btn-action-green">＋ Hızlı Randevu</button>
-      </div>
-      <div id="todayTimeline" class="today-list"></div>
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
         <h2 style="font-size:16px;font-weight:700;">Gelen Randevular</h2>
         <div style="display:flex;gap:8px;">
           <button id="filterAll" class="filter-btn active">Tümü</button>
@@ -329,26 +318,6 @@
         <button id="btnSendCancelWhatsApp" type="button" class="btn-action" style="background:#25d366;color:#fff;border-color:#25d366;">📲 WhatsApp ile Gönder</button>
         <button id="btnConfirmCancel" class="btn-action btn-action-red">✕ İptal Et</button>
       </div>
-    </div>
-  </div>
-
-  <!-- HIZLI RANDEVU MODALI -->
-  <div id="quickAppointmentModal" class="modal-backdrop">
-    <div class="action-modal">
-      <h3>＋ Hızlı Randevu</h3>
-      <p class="modal-sub">Telefonla veya dükkânda gelen müşteriyi online randevularla aynı takvime ekleyin.</p>
-      <form id="quickAppointmentForm">
-        <div class="form-group"><label class="form-label">Müşteri adı *</label><input id="quickName" class="form-input" required placeholder="Ad Soyad"></div>
-        <div class="form-group"><label class="form-label">WhatsApp / Telefon *</label><input id="quickPhone" class="form-input" required placeholder="0532 123 45 67"></div>
-        <div class="form-group"><label class="form-label">Hizmet *</label><select id="quickService" class="form-input" required></select></div>
-        <div class="form-group"><label class="form-label">Usta *</label><select id="quickBarber" class="form-input" required></select></div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-          <div class="form-group"><label class="form-label">Tarih *</label><input type="date" id="quickDate" class="form-input" required></div>
-          <div class="form-group"><label class="form-label">Saat *</label><input type="time" id="quickTime" class="form-input" required></div>
-        </div>
-        <div class="form-group"><label class="form-label">Not</label><input id="quickNote" class="form-input" placeholder="İsteğe bağlı"></div>
-        <div class="modal-actions"><button type="button" id="btnCloseQuickModal" class="btn-action">Vazgeç</button><button type="submit" class="btn-action btn-action-green">✓ Randevu Oluştur</button></div>
-      </form>
     </div>
   </div>
 
