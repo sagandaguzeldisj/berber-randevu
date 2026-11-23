@@ -55,8 +55,8 @@ const btnSubmitAppointment = document.getElementById('btnSubmitAppointment');
 
 const successModal = document.getElementById('successModal');
 const receiptContent = document.getElementById('receiptContent');
-const btnDirectWhatsApp = document.getElementById('btnDirectWhatsApp');
 const btnGoogleCal = document.getElementById('btnGoogleCal');
+const btnDeviceCalendar = document.getElementById('btnDeviceCalendar');
 const shareQR = document.getElementById('shareQR');
 const qrCodeImg = document.getElementById('qrCodeImg');
 const btnCloseModal = document.getElementById('btnCloseModal');
@@ -68,26 +68,6 @@ const historyList = document.getElementById('historyList');
 document.getElementById('btnCloseHistory').addEventListener('click', () => {
   historySection.style.display = 'none';
 });
-
-function updateBookingProgress() {
-  const progressBar = document.getElementById('bookingProgressBar');
-  const progressPercent = document.getElementById('bookingProgressPercent');
-  const progressLabel = document.getElementById('bookingProgressLabel');
-  const steps = [...document.querySelectorAll('.progress-step')];
-  if (!progressBar || !progressPercent || !progressLabel) return;
-  let current = 1;
-  if (selection.serviceIds.length) current = 2;
-  if (selection.barberId && selection.barberId !== 'any') current = 3;
-  if (selection.date) current = 4;
-  if (selection.time) current = 5;
-  if (custNameInput && custPhoneInput && custNameInput.value.trim() && custPhoneInput.value.trim()) current = 5;
-  const percent = Math.round(((current - 1) / 4) * 100);
-  progressBar.style.width = `${percent}%`;
-  progressPercent.textContent = `${percent}%`;
-  const labels = ['Randevuya başlayalım', 'Hizmet tamam — usta seçin', 'Usta tamam — gün seçin', 'Gün tamam — saat seçin', 'Bilgiler hazır — onaylayın'];
-  progressLabel.textContent = labels[current - 1];
-  steps.forEach((step, i) => step.classList.toggle('active', i < current));
-}
 
 function showToast(msg) {
   if (!toastEl) return;
@@ -165,7 +145,6 @@ async function init() {
         renderDates();
         renderTimeSlots();
         updateSummary();
-        updateBookingProgress();
       });
     }
 
@@ -176,8 +155,6 @@ async function init() {
 
     // Telefon girildiğinde otomatik geçmiş yükle
     custPhoneInput.addEventListener('blur', loadCustomerHistory);
-    [custNameInput, custPhoneInput].forEach(input => input.addEventListener('input', updateBookingProgress));
-    updateBookingProgress();
 
   } catch (err) {
     showToast('Sunucu bağlantısı sağlanamadı');
@@ -252,7 +229,6 @@ function renderServices() {
     servicesList.appendChild(card);
   });
   updateSummary();
-  updateBookingProgress();
 }
 
 // Berberler
@@ -273,7 +249,6 @@ function renderBarbers() {
       renderPortfolio(barber.id);
       renderTimeSlots();
       updateSummary();
-      updateBookingProgress();
     });
     barbersList.appendChild(card);
   });
@@ -519,7 +494,6 @@ async function loadCustomerHistory() {
           <div style="color:var(--text-secondary); font-size:12px;">
             ${app.services.map(s => s.name).join(', ')} — <strong style="color:var(--gold);">${app.totalPrice} ₺</strong>
           </div>
-          ${app.status === 'iptal' && app.cancelReason ? `<div style="margin-top:6px;color:var(--red);font-size:11px;">❗ İptal nedeni: ${app.cancelReason}</div>` : ''}
         </div>`;
     }).join('');
   } catch (e) {}
@@ -566,29 +540,6 @@ btnSubmitAppointment.addEventListener('click', async () => {
     appData.appointments = appData.appointments || [];
     appData.appointments.unshift(app);
 
-    // WhatsApp mesajı
-    const shop = appData.shop || {};
-    const shopPhone = (shop.phone || '905551234567').replace(/\D/g, '');
-    const servicesText = app.services.map(s => `• ${s.name} (${s.price} ₺)`).join('\n');
-    const [y, m, d] = app.date.split('-');
-    const dateFormatted = `${d}.${m}.${y}`;
-
-    let waMsg = `💈 *YENİ BERBER RANDEVU TALEBİ* 💈\n\n`;
-    waMsg += `📋 *Randevu No:* ${app.id}\n`;
-    waMsg += `👤 *Müşteri:* ${app.customerName}\n`;
-    waMsg += `📞 *Telefon:* ${app.customerPhone}\n\n`;
-    waMsg += `✂️ *Hizmetler:*\n${servicesText}\n\n`;
-    waMsg += `👨‍🦱 *Usta:* ${app.barberName}\n`;
-    waMsg += `📅 *Tarih:* ${dateFormatted}\n`;
-    waMsg += `⏰ *Saat:* ${app.time}\n`;
-    waMsg += `⏱️ *Süre:* ${app.totalDuration} dk\n`;
-    waMsg += `💵 *Toplam:* ${app.totalPrice} ₺\n`;
-    if (app.customerNote) waMsg += `📝 *Not:* ${app.customerNote}\n`;
-    waMsg += `\nRandevumu onaylıyor musunuz? Teşekkürler!`;
-
-    const waUrl = `https://wa.me/${shopPhone}?text=${encodeURIComponent(waMsg)}`;
-    btnDirectWhatsApp.href = waUrl;
-
     // Google Calendar linki
     const [startH, startM] = app.time.split(':').map(Number);
     const startDate = new Date(Number(y), Number(m) - 1, Number(d), startH, startM);
@@ -604,6 +555,32 @@ btnSubmitAppointment.addEventListener('click', async () => {
     const calDetails = encodeURIComponent(`Hizmetler: ${app.services.map(s => s.name).join(', ')}\nToplam Tutar: ${app.totalPrice} ₺\nRandevu No: ${app.id}`);
     const calLocation = encodeURIComponent(shop.address || '');
     btnGoogleCal.href = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${calTitle}&dates=${startDT}/${endDT}&details=${calDetails}&location=${calLocation}`;
+
+    // iPhone Apple Takvim ve Android'deki uyumlu takvim uygulamaları için .ics dosyası.
+    // Siri, kullanıcı etkinliği takvimine ekledikten sonra bu etkinliği görebilir; web sayfası Siri'ye doğrudan kayıt yapamaz.
+    const icsEscape = value => String(value || '').replace(/\\/g, '\\\\').replace(/\n/g, '\\n').replace(/,/g, '\\,').replace(/;/g, '\\;');
+    const icsDate = dt => `${dt.getFullYear()}${pad(dt.getMonth() + 1)}${pad(dt.getDate())}T${pad(dt.getHours())}${pad(dt.getMinutes())}00`;
+    const icsContent = [
+      'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Berber Randevu//TR', 'CALSCALE:GREGORIAN',
+      'BEGIN:VEVENT', `UID:${icsEscape(app.id)}@berber-randevu`, `DTSTAMP:${icsDate(new Date())}`,
+      `DTSTART:${icsDate(startDate)}`, `DTEND:${icsDate(endDate)}`,
+      `SUMMARY:${icsEscape(`Berber Randevusu - ${app.barberName}`)}`,
+      `DESCRIPTION:${icsEscape(`Hizmetler: ${app.services.map(s => s.name).join(', ')}\nToplam Tutar: ${app.totalPrice} TL\nRandevu No: ${app.id}`)}`,
+      `LOCATION:${icsEscape(shop.address || shop.name || '')}`, 'END:VEVENT', 'END:VCALENDAR'
+    ].join('\r\n');
+    if (btnDeviceCalendar) {
+      btnDeviceCalendar.onclick = () => {
+        const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+        const fileUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = fileUrl;
+        link.download = `berber-randevusu-${app.id}.ics`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(fileUrl), 1500);
+      };
+    }
 
     // QR Kod — her zaman canlı URL'yi kullan
     const origin = window.location.origin;

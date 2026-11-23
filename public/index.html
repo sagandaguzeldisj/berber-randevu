@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=20261123b">
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#14110D">
   <link rel="icon" href="/logo_square.svg">
@@ -95,21 +95,6 @@
             </div>
           </div>
         </header>
-
-        <div class="booking-progress" aria-label="Randevu ilerlemesi">
-          <div class="booking-progress-top">
-            <span><strong id="bookingProgressLabel">Randevuya başlayalım</strong></span>
-            <span id="bookingProgressPercent">0%</span>
-          </div>
-          <div class="booking-progress-track"><span id="bookingProgressBar"></span></div>
-          <div class="booking-progress-steps">
-            <span class="progress-step active" data-progress="1">Hizmet</span>
-            <span class="progress-step" data-progress="2">Usta</span>
-            <span class="progress-step" data-progress="3">Gün</span>
-            <span class="progress-step" data-progress="4">Saat</span>
-            <span class="progress-step" data-progress="5">Bilgi</span>
-          </div>
-        </div>
 
         <div class="main-steps-container">
           
@@ -279,7 +264,7 @@
             </button>
             
             <p class="ticket-guarantee-text">
-              🔒 Sıfır ön ödeme • Randevunuz doğrudan ustanın WhatsApp hattına iletilir.
+              🔒 Sıfır ön ödeme • Randevu talebiniz işletmeye iletilir.
             </p>
           </div>
 
@@ -296,20 +281,15 @@
       <div class="success-card">
         <div class="success-icon-gold">✓</div>
         <h2 class="success-headline">Randevu Talebiniz Alındı!</h2>
-        <p class="success-sub">Randevunuz başarıyla kaydedildi! Ustanıza bildirmek için aşağıdaki butona tıklayın.</p>
+        <p class="success-sub">Randevunuz başarıyla kaydedildi. İsterseniz telefon takviminize ekleyebilirsiniz.</p>
         
         <div id="receiptContent" class="summary-receipt"></div>
-
-        <a id="btnDirectWhatsApp" href="#" target="_blank" class="btn-whatsapp btn-gold-success">
-          <span>💬</span><span>WhatsApp ile Ustanıza Gönder</span>
-        </a>
-
-        <a id="btnGoogleCal" href="#" target="_blank" class="btn-cal-action">
+<a id="btnGoogleCal" href="#" target="_blank" class="btn-cal-action">
           📅 Google Takvim'e Kaydet
         </a>
 
         <div id="shareQR" class="qr-share-box" style="display:none;">
-          <p class="qr-label">📱 Dükkan Randevu QR Kodunu Arkadaşınla Paylaş</p>
+          <p class="qr-label qr-label-green">📱 Dükkan Randevu QR Kodunu Arkadaşınla Paylaş</p>
           <img id="qrCodeImg" src="" alt="QR" class="qr-image">
         </div>
 
@@ -321,6 +301,6 @@
   </div>
 
   <div id="toast" class="toast"></div>
-  <script src="app.js"></script>
+  <script src="app.js?v=20261123b"></script>
 </body>
 </html>
