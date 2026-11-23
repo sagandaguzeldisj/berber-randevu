@@ -69,6 +69,26 @@ document.getElementById('btnCloseHistory').addEventListener('click', () => {
   historySection.style.display = 'none';
 });
 
+function updateBookingProgress() {
+  const progressBar = document.getElementById('bookingProgressBar');
+  const progressPercent = document.getElementById('bookingProgressPercent');
+  const progressLabel = document.getElementById('bookingProgressLabel');
+  const steps = [...document.querySelectorAll('.progress-step')];
+  if (!progressBar || !progressPercent || !progressLabel) return;
+  let current = 1;
+  if (selection.serviceIds.length) current = 2;
+  if (selection.barberId && selection.barberId !== 'any') current = 3;
+  if (selection.date) current = 4;
+  if (selection.time) current = 5;
+  if (custNameInput && custPhoneInput && custNameInput.value.trim() && custPhoneInput.value.trim()) current = 5;
+  const percent = Math.round(((current - 1) / 4) * 100);
+  progressBar.style.width = `${percent}%`;
+  progressPercent.textContent = `${percent}%`;
+  const labels = ['Randevuya başlayalım', 'Hizmet tamam — usta seçin', 'Usta tamam — gün seçin', 'Gün tamam — saat seçin', 'Bilgiler hazır — onaylayın'];
+  progressLabel.textContent = labels[current - 1];
+  steps.forEach((step, i) => step.classList.toggle('active', i < current));
+}
+
 function showToast(msg) {
   if (!toastEl) return;
   toastEl.textContent = msg;
@@ -145,6 +165,7 @@ async function init() {
         renderDates();
         renderTimeSlots();
         updateSummary();
+        updateBookingProgress();
       });
     }
 
@@ -155,6 +176,8 @@ async function init() {
 
     // Telefon girildiğinde otomatik geçmiş yükle
     custPhoneInput.addEventListener('blur', loadCustomerHistory);
+    [custNameInput, custPhoneInput].forEach(input => input.addEventListener('input', updateBookingProgress));
+    updateBookingProgress();
 
   } catch (err) {
     showToast('Sunucu bağlantısı sağlanamadı');
@@ -229,6 +252,7 @@ function renderServices() {
     servicesList.appendChild(card);
   });
   updateSummary();
+  updateBookingProgress();
 }
 
 // Berberler
@@ -249,6 +273,7 @@ function renderBarbers() {
       renderPortfolio(barber.id);
       renderTimeSlots();
       updateSummary();
+      updateBookingProgress();
     });
     barbersList.appendChild(card);
   });
