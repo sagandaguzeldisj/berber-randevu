@@ -51,6 +51,24 @@ function getAdminHeaders() {
   };
 }
 
+function clearAdminSessionAndShowLogin() {
+  sessionStorage.removeItem('berber_admin_logged');
+  sessionStorage.removeItem('berber_admin_token');
+  if (pinOverlay) pinOverlay.style.display = 'flex';
+  if (inputPin) { inputPin.value = ''; inputPin.focus(); }
+  if (pinError) { pinError.textContent = 'Oturum süresi doldu. Lütfen PIN ile tekrar giriş yapın.'; pinError.style.display = 'block'; }
+}
+
+async function adminFetch(url, options = {}) {
+  const opts = { ...options, headers: { ...getAdminHeaders(), ...(options.headers || {}) } };
+  const res = await fetch(url, opts);
+  if (res.status === 401) {
+    clearAdminSessionAndShowLogin();
+    throw new Error('AUTH_EXPIRED');
+  }
+  return res;
+}
+
 // --- PIN GİRİŞİ ---
 btnLogin.addEventListener('click', async () => {
   const pin = inputPin.value.trim();
@@ -76,7 +94,7 @@ btnLogin.addEventListener('click', async () => {
   }
 });
 inputPin.addEventListener('keydown', e => { if (e.key === 'Enter') btnLogin.click(); });
-if (sessionStorage.getItem('berber_admin_logged') === 'true') {
+if (sessionStorage.getItem('berber_admin_logged') === 'true' && sessionStorage.getItem('berber_admin_token')) {
   pinOverlay.style.display = 'none';
   loadAdminData();
 }
@@ -94,11 +112,11 @@ document.querySelectorAll('.admin-tab-btn').forEach(btn => {
 // --- VERİ YÜKLEME ---
 async function loadAdminData() {
   try {
-    let res = await fetch('/api/admin/data?shop=' + encodeURIComponent(currentShop), {
+    let res = await adminFetch('/api/admin/data?shop=' + encodeURIComponent(currentShop), {
       headers: getAdminHeaders()
     });
     if (!res.ok) {
-      res = await fetch('/api/data?shop=' + encodeURIComponent(currentShop), {
+      res = await adminFetch('/api/data?shop=' + encodeURIComponent(currentShop), {
         headers: getAdminHeaders()
       });
     }
@@ -107,7 +125,7 @@ async function loadAdminData() {
 
     // Randevuları doğrudan garanti endpoint'ten de çek
     try {
-      const appRes = await fetch('/api/appointments?shop=' + encodeURIComponent(currentShop), {
+      const appRes = await adminFetch('/api/appointments?shop=' + encodeURIComponent(currentShop), {
         headers: getAdminHeaders()
       });
       if (appRes.ok) {
@@ -120,7 +138,7 @@ async function loadAdminData() {
 
     // Hatırlatmaları da garanti endpoint'ten çek
     try {
-      const remRes = await fetch('/api/reminders?shop=' + encodeURIComponent(currentShop), {
+      const remRes = await adminFetch('/api/reminders?shop=' + encodeURIComponent(currentShop), {
         headers: getAdminHeaders()
       });
       if (remRes.ok) {
@@ -140,7 +158,7 @@ async function loadAdminData() {
     populatePortfolioBarberSelect();
     populateSettings();
   } catch (e) {
-    showToast('Veriler yüklenirken hata oluştu');
+    if (e.message !== 'AUTH_EXPIRED') showToast('Veriler yüklenirken hata oluştu');
   }
 }
 
@@ -163,7 +181,7 @@ function renderHeader() {
 toggleOpenBtn.addEventListener('click', async () => {
   const newStatus = !(adminData.shop.isOpen !== false);
   try {
-    const res = await fetch('/api/shop', {
+    const res = await adminFetch('/api/shop', {
       method: 'POST', headers: getAdminHeaders(),
       body: JSON.stringify({ isOpen: newStatus })
     });
@@ -210,6 +228,7 @@ function buildWhatsAppUrl(app, type = 'confirm') {
   }
   return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
 }
+
 
 function renderAppointments() {
   appointmentsList.innerHTML = '';
@@ -263,13 +282,14 @@ function renderAppointments() {
 window.updateStatus = async function(id, status) {
   if (status === 'iptal') { openCancelModal(id); return; }
   try {
-    const res = await fetch(`/api/appointments/${encodeURIComponent(id)}?shop=${encodeURIComponent(currentShop)}`, {
-      method: 'PUT', headers: getAdminHeaders(),
+    const res = await adminFetch(`/api/appointments/${id}`, {
+      method: 'PUT',
       body: JSON.stringify({ status })
     });
-    if (res.ok) { showToast(`Durum: ${status}`); loadAdminData(); }
-    else { const data = await res.json().catch(()=>({})); showToast(data.error || 'İşlem başarısız'); }
-  } catch (e) { showToast('Sunucu hatası'); }
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) { showToast(status === 'onaylandi' ? 'Randevu onaylandı.' : 'Randevu tamamlandı.'); await loadAdminData(); }
+    else showToast(data.error || 'İşlem başarısız');
+  } catch (e) { if (e.message !== 'AUTH_EXPIRED') showToast('Sunucu hatası'); }
 };
 
 let cancelPopupWindow = null;
@@ -281,31 +301,18 @@ window.openCancelModal = function(id) {
   document.getElementById('cancelWhatsAppCheck').checked = true;
   document.getElementById('cancelModalSummary').textContent = `${app.customerName} — ${app.date || ''} ${app.time || ''} randevusu iptal edilecek.`;
   document.getElementById('cancelModal').classList.add('active');
+  updateCancelButtonLabel();
   setTimeout(() => document.getElementById('cancelReasonInput').focus(), 50);
 };
 
 function closeCancelModal() { document.getElementById('cancelModal').classList.remove('active'); }
-document.getElementById('btnCloseCancelModal').addEventListener('click', closeCancelModal);
-
-// İptal nedenini yazdıktan sonra randevuyu iptal etmeden WhatsApp mesajını aç.
-const btnSendCancelWhatsApp = document.getElementById('btnSendCancelWhatsApp');
-if (btnSendCancelWhatsApp) {
-  btnSendCancelWhatsApp.addEventListener('click', () => {
-    const id = document.getElementById('cancelAppointmentId').value;
-    const reason = document.getElementById('cancelReasonInput').value.trim();
-    const app = (adminData.appointments || []).find(a => a.id === id);
-    if (!app) { showToast('Randevu bulunamadı.'); return; }
-    if (!reason) {
-      showToast('Önce iptal nedenini yazın.');
-      document.getElementById('cancelReasonInput').focus();
-      return;
-    }
-    const url = buildWhatsAppUrl({ ...app, cancelReason: reason }, 'cancel');
-    if (!url) { showToast('Müşterinin geçerli bir telefon/WhatsApp numarası bulunamadı.'); return; }
-    window.open(url, '_blank', 'noopener,noreferrer');
-    showToast("WhatsApp açıldı. Mesajı göndermek için WhatsApp'ta Gönder'e basın.");
-  });
+function updateCancelButtonLabel() {
+  const btn = document.getElementById('btnConfirmCancel');
+  const notify = document.getElementById('cancelWhatsAppCheck').checked;
+  if (btn) btn.textContent = notify ? '✕ İptal Et ve WhatsApp ile Gönder' : '✕ İptal Et';
 }
+document.getElementById('cancelWhatsAppCheck').addEventListener('change', updateCancelButtonLabel);
+document.getElementById('btnCloseCancelModal').addEventListener('click', closeCancelModal);
 document.getElementById('btnConfirmCancel').addEventListener('click', async () => {
   const id = document.getElementById('cancelAppointmentId').value;
   const reason = document.getElementById('cancelReasonInput').value.trim();
@@ -313,51 +320,48 @@ document.getElementById('btnConfirmCancel').addEventListener('click', async () =
   const app = (adminData.appointments || []).find(a => a.id === id);
   if (!id || !app) return;
   if (!reason) { showToast('Lütfen iptal nedenini yazın.'); document.getElementById('cancelReasonInput').focus(); return; }
+  if (notify && !formatPhone(app.customerPhone)) { showToast('Müşterinin geçerli bir telefon numarası yok.'); return; }
 
-  // Tarayıcı popup engelini önlemek için pencereyi kullanıcı tıklaması sırasında açıyoruz.
-  if (notify && formatPhone(app.customerPhone)) cancelPopupWindow = window.open('about:blank', '_blank');
+  if (notify) cancelPopupWindow = window.open('about:blank', '_blank');
   const btn = document.getElementById('btnConfirmCancel');
   btn.disabled = true;
   try {
-    const res = await fetch(`/api/appointments/${encodeURIComponent(id)}?shop=${encodeURIComponent(currentShop)}`, {
-      method: 'PUT', headers: getAdminHeaders(),
+    const res = await adminFetch(`/api/appointments/${id}`, {
+      method: 'PUT',
       body: JSON.stringify({ status: 'iptal', cancelReason: reason, whatsappNotify: notify })
     });
-    const data = await res.json().catch(()=>({}));
+    const data = await res.json().catch(() => ({}));
     if (!res.ok) {
       if (cancelPopupWindow) cancelPopupWindow.close();
       showToast(data.error || 'İptal işlemi başarısız');
       return;
     }
-    const updated = data.appointment || { ...app, status:'iptal', cancelReason:reason };
+    const updated = data.appointment || { ...app, status: 'iptal', cancelReason: reason };
     if (cancelPopupWindow) {
       const url = buildWhatsAppUrl(updated, 'cancel');
       if (url) cancelPopupWindow.location.href = url; else cancelPopupWindow.close();
       cancelPopupWindow = null;
     }
     closeCancelModal();
-    showToast(notify ? 'Randevu iptal edildi. WhatsApp bildirimi açıldı.' : 'Randevu iptal edildi.');
-    loadAdminData();
+    showToast(notify ? 'Randevu iptal edildi ve WhatsApp bildirimi açıldı.' : 'Randevu iptal edildi.');
+    await loadAdminData();
   } catch (e) {
     if (cancelPopupWindow) cancelPopupWindow.close();
-    showToast('Sunucu hatası');
+    if (e.message !== 'AUTH_EXPIRED') showToast('Sunucu hatası');
   } finally { btn.disabled = false; }
 });
-
 document.getElementById('cancelModal').addEventListener('click', e => { if (e.target.id === 'cancelModal') closeCancelModal(); });
 
 window.deleteAppointment = async function(id) {
-  if (!confirm('Bu randevuyu kalıcı olarak silmek istiyor musunuz?')) return;
+  if (!confirm('Bu randevuyu silmek istiyor musunuz?')) return;
   try {
-    const res = await fetch(`/api/appointments/${encodeURIComponent(id)}?shop=${encodeURIComponent(currentShop)}`, {
-      method: 'DELETE', headers: getAdminHeaders()
-    });
+    const res = await adminFetch(`/api/appointments/${id}`, { method: 'DELETE' });
     const data = await res.json().catch(() => ({}));
-    if (!res.ok) { showToast(data.error || 'Randevu silinemedi.'); return; }
-    showToast('Randevu silindi.');
-    await loadAdminData();
-  } catch (e) { showToast('Sunucuya bağlanılamadı.'); }
+    if (res.ok) { showToast('Randevu silindi.'); await loadAdminData(); }
+    else showToast(data.error || 'Silme işlemi başarısız');
+  } catch (e) { if (e.message !== 'AUTH_EXPIRED') showToast('Sunucu hatası'); }
 };
+
 
 
 // --- HATIRLATMALAR ---
@@ -405,7 +409,7 @@ function renderReminders() {
 
 window.clearReminder = async function(id) {
   try {
-    const res = await fetch('/api/reminders/clear', {
+    const res = await adminFetch('/api/reminders/clear', {
       method: 'POST', headers: getAdminHeaders(),
       body: JSON.stringify({ id })
     });
@@ -703,7 +707,7 @@ document.getElementById('settingsForm').addEventListener('submit', async e => {
     pin: document.getElementById('settingPin').value.trim() || '0000'
   };
   try {
-    const res = await fetch('/api/shop', { method: 'POST', headers: getAdminHeaders(), body: JSON.stringify(payload) });
+    const res = await adminFetch('/api/shop', { method: 'POST', headers: getAdminHeaders(), body: JSON.stringify(payload) });
     if (res.ok) { showToast('Ayarlar kaydedildi!'); loadAdminData(); }
   } catch (e) { showToast('Hata'); }
 });

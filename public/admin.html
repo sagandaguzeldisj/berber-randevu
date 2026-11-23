@@ -40,33 +40,6 @@
     .pin-overlay { position:fixed; inset:0; background:rgba(8,10,16,0.92); backdrop-filter:blur(10px); display:flex; align-items:center; justify-content:center; z-index:999; padding:16px; }
     .pin-box { background:linear-gradient(145deg, #161c2a, #0f1420); border:1.5px solid var(--gold); border-radius:var(--radius-lg); padding:36px 30px; width:100%; max-width:380px; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.8), 0 0 25px rgba(212,175,55,0.18); }
 
-    .admin-dashboard { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; margin-bottom:14px; }
-    .dash-card { background:linear-gradient(145deg,rgba(255,255,255,.045),rgba(255,255,255,.02)); border:1px solid var(--border-color); border-radius:14px; padding:14px; box-shadow:0 8px 24px rgba(0,0,0,.12); }
-    .dash-card .dash-label { color:var(--text-muted); font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; }
-    .dash-card .dash-value { margin-top:6px; font-size:22px; font-weight:800; color:#fff; }
-    .dash-card .dash-sub { margin-top:4px; font-size:11px; color:var(--text-secondary); }
-    .dash-card.gold { border-color:rgba(212,175,55,.35); }
-    .dash-card.green { border-color:rgba(16,185,129,.3); }
-    .dash-card.blue { border-color:rgba(59,130,246,.3); }
-    .dash-card.red { border-color:rgba(239,68,68,.3); }
-    .quick-row { display:flex; justify-content:space-between; align-items:center; gap:10px; margin:0 0 14px; flex-wrap:wrap; }
-    .quick-title { font-size:12px; color:var(--text-secondary); }
-    .modal-backdrop { position:fixed; inset:0; background:rgba(5,8,15,.78); backdrop-filter:blur(7px); display:none; align-items:center; justify-content:center; z-index:1200; padding:16px; }
-    .modal-backdrop.active { display:flex; }
-    .action-modal { width:100%; max-width:520px; max-height:90vh; overflow:auto; background:#111827; border:1px solid var(--border-color); border-radius:18px; padding:20px; box-shadow:0 24px 80px rgba(0,0,0,.55); }
-    .action-modal h3 { font-size:18px; margin-bottom:6px; }
-    .action-modal p.modal-sub { color:var(--text-secondary); font-size:12px; margin-bottom:16px; line-height:1.5; }
-    .modal-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:16px; }
-    .wa-check { display:flex; gap:10px; align-items:flex-start; margin-top:12px; padding:12px; border:1px solid rgba(37,211,102,.25); background:rgba(37,211,102,.07); border-radius:12px; font-size:12px; color:#d1fae5; cursor:pointer; }
-    .wa-check input { margin-top:2px; accent-color:#25d366; }
-    .cancel-reason { margin-top:12px; padding:10px 12px; border-radius:10px; background:rgba(239,68,68,.08); border:1px solid rgba(239,68,68,.2); color:#fecaca; font-size:12px; line-height:1.5; }
-    .today-list { background:var(--bg-card); border:1px solid var(--border-color); border-radius:14px; padding:14px; margin-bottom:14px; }
-    .today-item { display:grid; grid-template-columns:62px 1fr auto; gap:10px; align-items:center; padding:10px 0; border-bottom:1px solid rgba(148,163,184,.1); }
-    .today-item:last-child { border-bottom:none; }
-    .today-time { font-size:15px; font-weight:800; color:var(--gold); }
-    .today-name { font-size:13px; font-weight:700; color:#fff; }
-    .today-meta { font-size:11px; color:var(--text-muted); margin-top:3px; }
-    @media (max-width:700px) { .admin-dashboard { grid-template-columns:repeat(2,minmax(0,1fr)); } .today-item { grid-template-columns:54px 1fr; } .today-item .today-status { grid-column:2; justify-self:start; } }
   </style>
 </head>
 <body>
@@ -110,7 +83,7 @@
 
     <!-- TAB: RANDEVULAR -->
     <main id="appointmentsTab" class="tab-content active">
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
         <h2 style="font-size:16px;font-weight:700;">Gelen Randevular</h2>
         <div style="display:flex;gap:8px;">
           <button id="filterAll" class="filter-btn active">Tümü</button>
@@ -303,7 +276,7 @@
   <div id="cancelModal" class="modal-backdrop">
     <div class="action-modal">
       <h3>✕ Randevuyu İptal Et</h3>
-      <p class="modal-sub" id="cancelModalSummary">Müşteriye iptal nedeni ile birlikte bilgi verebilirsiniz.</p>
+      <p class="modal-sub" id="cancelModalSummary">Randevuyu iptal etmek için nedeni yazın. İsterseniz müşteriye WhatsApp üzerinden bildirin.</p>
       <input type="hidden" id="cancelAppointmentId">
       <div class="form-group">
         <label class="form-label">İptal nedeni</label>
@@ -311,17 +284,14 @@
       </div>
       <label class="wa-check">
         <input type="checkbox" id="cancelWhatsAppCheck" checked>
-        <span><strong>WhatsApp ile müşteriye bildir</strong><br><span style="opacity:.8;">İptal mesajı müşterinin WhatsApp sohbetinde hazır açılır. Göndermek için WhatsApp'ta “Gönder”e basılır.</span></span>
+        <span><strong>WhatsApp ile müşteriye bildir</strong></span>
       </label>
-      <div class="modal-actions" style="display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;">
+      <div class="modal-actions">
         <button id="btnCloseCancelModal" class="btn-action">Vazgeç</button>
-        <button id="btnSendCancelWhatsApp" type="button" class="btn-action" style="background:#25d366;color:#fff;border-color:#25d366;">📲 WhatsApp ile Gönder</button>
-        <button id="btnConfirmCancel" class="btn-action btn-action-red">✕ İptal Et</button>
+        <button id="btnConfirmCancel" class="btn-action btn-action-red">✕ İptal Et ve WhatsApp ile Gönder</button>
       </div>
     </div>
   </div>
 
-  <div id="toast" class="toast"></div>
-  <script src="admin.js"></script>
 </body>
 </html>
