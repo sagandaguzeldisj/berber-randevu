@@ -55,8 +55,8 @@ const btnSubmitAppointment = document.getElementById('btnSubmitAppointment');
 
 const successModal = document.getElementById('successModal');
 const receiptContent = document.getElementById('receiptContent');
+const btnDirectWhatsApp = document.getElementById('btnDirectWhatsApp');
 const btnGoogleCal = document.getElementById('btnGoogleCal');
-const btnDeviceCalendar = document.getElementById('btnDeviceCalendar');
 const shareQR = document.getElementById('shareQR');
 const qrCodeImg = document.getElementById('qrCodeImg');
 const btnCloseModal = document.getElementById('btnCloseModal');
@@ -80,7 +80,11 @@ function showToast(msg) {
 async function init() {
   try {
     const res = await fetch('/api/data?shop=' + encodeURIComponent(currentShop));
-    if (!res.ok) throw new Error('Veri çekilemedi');
+    if (!res.ok) {
+      let detail = {};
+      try { detail = await res.json(); } catch (_) {}
+      throw new Error(detail.error || (res.status === 404 ? 'Dükkan bulunamadı' : res.status === 403 ? 'İşletme askıya alınmış' : 'Sunucu yanıt vermedi'));
+    }
     appData = await res.json();
 
     renderShopInfo();
@@ -157,7 +161,8 @@ async function init() {
     custPhoneInput.addEventListener('blur', loadCustomerHistory);
 
   } catch (err) {
-    showToast('Sunucu bağlantısı sağlanamadı');
+    console.error('Uygulama başlatılamadı:', err);
+    showToast(err && err.message ? err.message : 'Sunucu bağlantısı sağlanamadı');
   }
 }
 
@@ -540,6 +545,29 @@ btnSubmitAppointment.addEventListener('click', async () => {
     appData.appointments = appData.appointments || [];
     appData.appointments.unshift(app);
 
+    // WhatsApp mesajı
+    const shop = appData.shop || {};
+    const shopPhone = (shop.phone || '905551234567').replace(/\D/g, '');
+    const servicesText = app.services.map(s => `• ${s.name} (${s.price} ₺)`).join('\n');
+    const [y, m, d] = app.date.split('-');
+    const dateFormatted = `${d}.${m}.${y}`;
+
+    let waMsg = `💈 *YENİ BERBER RANDEVU TALEBİ* 💈\n\n`;
+    waMsg += `📋 *Randevu No:* ${app.id}\n`;
+    waMsg += `👤 *Müşteri:* ${app.customerName}\n`;
+    waMsg += `📞 *Telefon:* ${app.customerPhone}\n\n`;
+    waMsg += `✂️ *Hizmetler:*\n${servicesText}\n\n`;
+    waMsg += `👨‍🦱 *Usta:* ${app.barberName}\n`;
+    waMsg += `📅 *Tarih:* ${dateFormatted}\n`;
+    waMsg += `⏰ *Saat:* ${app.time}\n`;
+    waMsg += `⏱️ *Süre:* ${app.totalDuration} dk\n`;
+    waMsg += `💵 *Toplam:* ${app.totalPrice} ₺\n`;
+    if (app.customerNote) waMsg += `📝 *Not:* ${app.customerNote}\n`;
+    waMsg += `\nRandevumu onaylıyor musunuz? Teşekkürler!`;
+
+    const waUrl = `https://wa.me/${shopPhone}?text=${encodeURIComponent(waMsg)}`;
+    btnDirectWhatsApp.href = waUrl;
+
     // Google Calendar linki
     const [startH, startM] = app.time.split(':').map(Number);
     const startDate = new Date(Number(y), Number(m) - 1, Number(d), startH, startM);
@@ -555,32 +583,6 @@ btnSubmitAppointment.addEventListener('click', async () => {
     const calDetails = encodeURIComponent(`Hizmetler: ${app.services.map(s => s.name).join(', ')}\nToplam Tutar: ${app.totalPrice} ₺\nRandevu No: ${app.id}`);
     const calLocation = encodeURIComponent(shop.address || '');
     btnGoogleCal.href = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${calTitle}&dates=${startDT}/${endDT}&details=${calDetails}&location=${calLocation}`;
-
-    // iPhone Apple Takvim ve Android'deki uyumlu takvim uygulamaları için .ics dosyası.
-    // Siri, kullanıcı etkinliği takvimine ekledikten sonra bu etkinliği görebilir; web sayfası Siri'ye doğrudan kayıt yapamaz.
-    const icsEscape = value => String(value || '').replace(/\\/g, '\\\\').replace(/\n/g, '\\n').replace(/,/g, '\\,').replace(/;/g, '\\;');
-    const icsDate = dt => `${dt.getFullYear()}${pad(dt.getMonth() + 1)}${pad(dt.getDate())}T${pad(dt.getHours())}${pad(dt.getMinutes())}00`;
-    const icsContent = [
-      'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Berber Randevu//TR', 'CALSCALE:GREGORIAN',
-      'BEGIN:VEVENT', `UID:${icsEscape(app.id)}@berber-randevu`, `DTSTAMP:${icsDate(new Date())}`,
-      `DTSTART:${icsDate(startDate)}`, `DTEND:${icsDate(endDate)}`,
-      `SUMMARY:${icsEscape(`Berber Randevusu - ${app.barberName}`)}`,
-      `DESCRIPTION:${icsEscape(`Hizmetler: ${app.services.map(s => s.name).join(', ')}\nToplam Tutar: ${app.totalPrice} TL\nRandevu No: ${app.id}`)}`,
-      `LOCATION:${icsEscape(shop.address || shop.name || '')}`, 'END:VEVENT', 'END:VCALENDAR'
-    ].join('\r\n');
-    if (btnDeviceCalendar) {
-      btnDeviceCalendar.onclick = () => {
-        const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
-        const fileUrl = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = fileUrl;
-        link.download = `berber-randevusu-${app.id}.ics`;
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        setTimeout(() => URL.revokeObjectURL(fileUrl), 1500);
-      };
-    }
 
     // QR Kod — her zaman canlı URL'yi kullan
     const origin = window.location.origin;

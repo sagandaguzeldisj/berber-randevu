@@ -51,24 +51,6 @@ function getAdminHeaders() {
   };
 }
 
-function clearAdminSessionAndShowLogin() {
-  sessionStorage.removeItem('berber_admin_logged');
-  sessionStorage.removeItem('berber_admin_token');
-  if (pinOverlay) pinOverlay.style.display = 'flex';
-  if (inputPin) { inputPin.value = ''; inputPin.focus(); }
-  if (pinError) { pinError.textContent = 'Oturum süresi doldu. Lütfen PIN ile tekrar giriş yapın.'; pinError.style.display = 'block'; }
-}
-
-async function adminFetch(url, options = {}) {
-  const opts = { ...options, headers: { ...getAdminHeaders(), ...(options.headers || {}) } };
-  const res = await fetch(url, opts);
-  if (res.status === 401) {
-    clearAdminSessionAndShowLogin();
-    throw new Error('AUTH_EXPIRED');
-  }
-  return res;
-}
-
 // --- PIN GİRİŞİ ---
 btnLogin.addEventListener('click', async () => {
   const pin = inputPin.value.trim();
@@ -80,6 +62,8 @@ btnLogin.addEventListener('click', async () => {
     });
     const result = await res.json();
     if (result.success && result.token) {
+      sessionStorage.setItem('berber_admin_logged_' + currentShop, 'true');
+      sessionStorage.setItem('berber_admin_token_' + currentShop, result.token);
       sessionStorage.setItem('berber_admin_logged', 'true');
       sessionStorage.setItem('berber_admin_token', result.token);
       pinOverlay.style.display = 'none';
@@ -94,7 +78,8 @@ btnLogin.addEventListener('click', async () => {
   }
 });
 inputPin.addEventListener('keydown', e => { if (e.key === 'Enter') btnLogin.click(); });
-if (sessionStorage.getItem('berber_admin_logged') === 'true' && sessionStorage.getItem('berber_admin_token')) {
+if (sessionStorage.getItem('berber_admin_logged_' + currentShop) === 'true' ||
+    sessionStorage.getItem('berber_admin_logged') === 'true') {
   pinOverlay.style.display = 'none';
   loadAdminData();
 }
@@ -112,20 +97,34 @@ document.querySelectorAll('.admin-tab-btn').forEach(btn => {
 // --- VERİ YÜKLEME ---
 async function loadAdminData() {
   try {
-    let res = await adminFetch('/api/admin/data?shop=' + encodeURIComponent(currentShop), {
+    let res = await fetch('/api/admin/data?shop=' + encodeURIComponent(currentShop), {
       headers: getAdminHeaders()
     });
     if (!res.ok) {
-      res = await adminFetch('/api/data?shop=' + encodeURIComponent(currentShop), {
+      res = await fetch('/api/data?shop=' + encodeURIComponent(currentShop), {
         headers: getAdminHeaders()
       });
     }
-    if (!res.ok) throw new Error();
+    if (!res.ok) {
+      if (res.status === 401 || res.status === 403 || res.status === 404) {
+        sessionStorage.removeItem('berber_admin_logged_' + currentShop);
+        sessionStorage.removeItem('berber_admin_token_' + currentShop);
+        sessionStorage.removeItem('berber_admin_logged');
+        sessionStorage.removeItem('berber_admin_token');
+        pinOverlay.style.display = 'flex';
+        if (pinError) {
+          pinError.textContent = res.status === 403 ? 'Bu işletme askıya alınmış.' :
+            res.status === 404 ? 'Dükkan bulunamadı. Bağlantıyı kontrol edin.' : 'Oturum süresi doldu. PIN ile tekrar giriş yapın.';
+          pinError.style.display = 'block';
+        }
+      }
+      throw new Error('Panel verisi alınamadı: HTTP ' + res.status);
+    }
     adminData = await res.json();
 
     // Randevuları doğrudan garanti endpoint'ten de çek
     try {
-      const appRes = await adminFetch('/api/appointments?shop=' + encodeURIComponent(currentShop), {
+      const appRes = await fetch('/api/appointments?shop=' + encodeURIComponent(currentShop), {
         headers: getAdminHeaders()
       });
       if (appRes.ok) {
@@ -138,7 +137,7 @@ async function loadAdminData() {
 
     // Hatırlatmaları da garanti endpoint'ten çek
     try {
-      const remRes = await adminFetch('/api/reminders?shop=' + encodeURIComponent(currentShop), {
+      const remRes = await fetch('/api/reminders?shop=' + encodeURIComponent(currentShop), {
         headers: getAdminHeaders()
       });
       if (remRes.ok) {
@@ -158,7 +157,8 @@ async function loadAdminData() {
     populatePortfolioBarberSelect();
     populateSettings();
   } catch (e) {
-    if (e.message !== 'AUTH_EXPIRED') showToast('Veriler yüklenirken hata oluştu');
+    console.error(e);
+    showToast(e.message || 'Veriler yüklenirken hata oluştu');
   }
 }
 
@@ -181,7 +181,7 @@ function renderHeader() {
 toggleOpenBtn.addEventListener('click', async () => {
   const newStatus = !(adminData.shop.isOpen !== false);
   try {
-    const res = await adminFetch('/api/shop', {
+    const res = await fetch('/api/shop', {
       method: 'POST', headers: getAdminHeaders(),
       body: JSON.stringify({ isOpen: newStatus })
     });
@@ -204,32 +204,6 @@ document.getElementById('filterToday').addEventListener('click', e => setFilter(
 document.getElementById('filterPending').addEventListener('click', e => setFilter('pending', e.target));
 
 // --- RANDEVULAR ---
-function escapeHtml(value) {
-  return String(value ?? '').replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch]));
-}
-
-function formatPhone(phone) {
-  const digits = String(phone || '').replace(/\D/g, '');
-  if (!digits) return '';
-  return digits.startsWith('90') ? digits : '90' + digits.replace(/^0/, '');
-}
-
-function buildWhatsAppUrl(app, type = 'confirm') {
-  const phone = formatPhone(app.customerPhone);
-  if (!phone) return null;
-  const [y,m,d] = (app.date || '').split('-');
-  const dateStr = [d,m,y].filter(Boolean).join('.');
-  const services = (app.services || []).map(s => s.name).join(', ');
-  let text = '';
-  if (type === 'cancel') {
-    text = `Merhaba ${app.customerName}! 👋\n\n💈 ${adminData.shop.name || 'Berber'} randevunuz iptal edilmiştir.\n\n📅 Tarih: ${dateStr}\n⏰ Saat: ${app.time || '-'}\n👨‍🦱 Usta: ${app.barberName || '-'}\n✂️ Hizmet: ${services || '-'}\n\n❗ İptal nedeni: ${app.cancelReason || 'İşletme kaynaklı bir değişiklik nedeniyle.'}\n\nYaşanan durum için özür diler, anlayışınız için teşekkür ederiz. Yeni bir randevu oluşturmak isterseniz size yardımcı olmaktan memnuniyet duyarız. 🙏`;
-  } else {
-    text = `Merhaba ${app.customerName}! 👋\n\n💈 ${adminData.shop.name || 'Berber'} randevunuz ONAYLANMIŞTIR ✅\n\n📅 Tarih: ${dateStr}\n⏰ Saat: ${app.time}\n👨‍🦱 Usta: ${app.barberName}\n✂️ Hizmet: ${services}\n💵 Tutar: ${app.totalPrice} ₺\n\nSizi ağırlamaktan mutluluk duyarız!`;
-  }
-  return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
-}
-
-
 function renderAppointments() {
   appointmentsList.innerHTML = '';
   const now = new Date();
@@ -241,128 +215,73 @@ function renderAppointments() {
 
   if (apps.length === 0) {
     let emptyMsg = 'Henüz kayıtlı randevu bulunmuyor.';
-    if (currentFilter === 'today') emptyMsg = 'Bugün için randevu yok.';
-    else if (currentFilter === 'pending') emptyMsg = 'Onay bekleyen randevu yok.';
-    appointmentsList.innerHTML = `<div style="text-align:center;padding:40px 20px;color:var(--text-secondary);background:var(--bg-card);border-radius:var(--radius-md);border:1px solid var(--border-color);line-height:1.6;"><div style="font-size:36px;margin-bottom:10px;">📅</div><p style="font-size:15px;font-weight:600;color:#fff;">${emptyMsg}</p></div>`;
+    if (currentFilter === 'today') {
+      emptyMsg = 'Bugün için randevu yok. Gelecek randevuları görmek için yukarıdaki "Tümü" veya "Bekleyenler" butonuna tıklayabilirsiniz.';
+    } else if (currentFilter === 'pending') {
+      emptyMsg = 'Onay bekleyen randevu yok.';
+    }
+    appointmentsList.innerHTML = `<div style="text-align:center;padding:40px 20px;color:var(--text-secondary);background:var(--bg-card);border-radius:var(--radius-md);border:1px solid var(--border-color);line-height:1.6;">
+      <div style="font-size:36px;margin-bottom:10px;">📅</div><p style="font-size:15px;font-weight:600;color:#fff;">${emptyMsg}</p></div>`;
     return;
   }
 
-  apps.sort((a,b) => `${a.date || ''} ${a.time || ''}`.localeCompare(`${b.date || ''} ${b.time || ''}`));
   apps.forEach(app => {
     const [y,m,d] = (app.date || '').split('-');
     const dateStr = `${d}.${m}.${y}`;
-    const waUrl = buildWhatsAppUrl(app, app.status === 'iptal' ? 'cancel' : 'confirm');
+    const custPhone = (app.customerPhone || '').replace(/\D/g, '');
+    const fullPhone = custPhone.startsWith('90') ? custPhone : '90' + custPhone;
+
+    const waText = encodeURIComponent(
+      `Merhaba ${app.customerName}! 👋\n\n💈 ${adminData.shop.name || 'Gold Makas'} randevunuz ONAYLANMIŞTIR ✅\n\n📅 Tarih: ${dateStr}\n⏰ Saat: ${app.time}\n👨‍🦱 Usta: ${app.barberName}\n✂️ Hizmet: ${app.services.map(s=>s.name).join(', ')}\n💵 Tutar: ${app.totalPrice} ₺\n\nSizi ağırlamaktan mutluluk duyarız!`
+    );
+    const waUrl = `https://wa.me/${fullPhone}?text=${waText}`;
+
     const card = document.createElement('div');
     card.className = `app-card status-${app.status || 'beklemede'}`;
     card.innerHTML = `
       <div class="app-card-header">
-        <div><span class="app-customer-name">${escapeHtml(app.customerName)}</span><span style="font-size:12px;color:var(--text-muted);margin-left:6px;">(${escapeHtml(app.id)})</span></div>
-        <span class="app-badge badge-${escapeHtml(app.status || 'beklemede')}">${escapeHtml(app.status || 'beklemede')}</span>
+        <div>
+          <span class="app-customer-name">${app.customerName}</span>
+          <span style="font-size:12px;color:var(--text-muted);margin-left:6px;">(${app.id})</span>
+        </div>
+        <span class="app-badge badge-${app.status || 'beklemede'}">${app.status || 'beklemede'}</span>
       </div>
       <div class="app-details">
-        <div>📅 <strong>${escapeHtml(dateStr)} - ${escapeHtml(app.time)}</strong> (${escapeHtml(app.totalDuration)} dk)</div>
-        <div>👨‍🦱 <strong>Usta:</strong> ${escapeHtml(app.barberName)}</div>
-        <div>✂️ <strong>Hizmetler:</strong> ${(app.services||[]).map(s=>escapeHtml(s.name)).join(', ')}</div>
-        <div>💵 <strong>Tutar:</strong> <span style="color:var(--gold);font-weight:700;">${escapeHtml(app.totalPrice)} ₺</span></div>
-        <div>📞 <a href="tel:${escapeHtml(app.customerPhone)}" style="color:var(--text-primary);text-decoration:none;">${escapeHtml(app.customerPhone)}</a></div>
-        ${app.customerNote ? `<div style="color:var(--gold);margin-top:4px;">📝 "${escapeHtml(app.customerNote)}"</div>` : ''}
-        ${app.status === 'iptal' && app.cancelReason ? `<div class="cancel-reason"><strong>İptal nedeni:</strong> ${escapeHtml(app.cancelReason)}</div>` : ''}
+        <div>📅 <strong>${dateStr} - ${app.time}</strong> (${app.totalDuration} dk)</div>
+        <div>👨‍🦱 <strong>Usta:</strong> ${app.barberName}</div>
+        <div>✂️ <strong>Hizmetler:</strong> ${app.services.map(s=>s.name).join(', ')}</div>
+        <div>💵 <strong>Tutar:</strong> <span style="color:var(--gold);font-weight:700;">${app.totalPrice} ₺</span></div>
+        <div>📞 <a href="tel:${app.customerPhone}" style="color:var(--text-primary);text-decoration:none;">${app.customerPhone}</a></div>
+        ${app.customerNote ? `<div style="color:var(--gold);margin-top:4px;">📝 "${app.customerNote}"</div>` : ''}
       </div>
       <div class="app-actions">
-        ${app.status === 'beklemede' ? `<button class="btn-action btn-action-green" onclick="updateStatus('${escapeHtml(app.id)}','onaylandi')">✓ Onayla</button>` : ''}
-        ${app.status !== 'iptal' ? `<a href="${waUrl || '#'}" target="_blank" class="btn-action" style="background:#25d366;color:#fff;">💬 WhatsApp Bildir</a>` : `<a href="${waUrl || '#'}" target="_blank" class="btn-action" style="background:#25d366;color:#fff;">💬 İptal Bildirimini Gönder</a>`}
-        ${app.status !== 'tamamlandi' && app.status !== 'iptal' ? `<button class="btn-action" onclick="updateStatus('${escapeHtml(app.id)}','tamamlandi')">🏁 Tamamlandı</button>` : ''}
-        ${app.status !== 'iptal' ? `<button class="btn-action btn-action-red" onclick="openCancelModal('${escapeHtml(app.id)}')">✕ İptal</button>` : ''}
-        <button class="btn-action" style="color:var(--text-muted);" onclick="deleteAppointment('${escapeHtml(app.id)}')">🗑️ Sil</button>
+        ${app.status === 'beklemede' ? `<button class="btn-action btn-action-green" onclick="updateStatus('${app.id}','onaylandi')">✓ Onayla</button>` : ''}
+        <a href="${waUrl}" target="_blank" class="btn-action" style="background:#25d366;color:#fff;">💬 WhatsApp Bildir</a>
+        ${app.status !== 'tamamlandi' ? `<button class="btn-action" onclick="updateStatus('${app.id}','tamamlandi')">🏁 Tamamlandı</button>` : ''}
+        ${app.status !== 'iptal' ? `<button class="btn-action btn-action-red" onclick="updateStatus('${app.id}','iptal')">✕ İptal</button>` : ''}
+        <button class="btn-action" style="color:var(--text-muted);" onclick="deleteAppointment('${app.id}')">🗑️ Sil</button>
       </div>`;
     appointmentsList.appendChild(card);
   });
 }
 
 window.updateStatus = async function(id, status) {
-  if (status === 'iptal') { openCancelModal(id); return; }
   try {
-    const res = await adminFetch(`/api/appointments/${id}`, {
-      method: 'PUT',
+    const res = await fetch(`/api/appointments/${id}`, {
+      method: 'PUT', headers: getAdminHeaders(),
       body: JSON.stringify({ status })
     });
-    const data = await res.json().catch(() => ({}));
-    if (res.ok) { showToast(status === 'onaylandi' ? 'Randevu onaylandı.' : 'Randevu tamamlandı.'); await loadAdminData(); }
-    else showToast(data.error || 'İşlem başarısız');
-  } catch (e) { if (e.message !== 'AUTH_EXPIRED') showToast('Sunucu hatası'); }
+    if (res.ok) { showToast(`Durum: ${status}`); loadAdminData(); }
+  } catch (e) { showToast('Hata'); }
 };
-
-let cancelPopupWindow = null;
-window.openCancelModal = function(id) {
-  const app = (adminData.appointments || []).find(a => a.id === id);
-  if (!app) return;
-  document.getElementById('cancelAppointmentId').value = id;
-  document.getElementById('cancelReasonInput').value = '';
-  document.getElementById('cancelWhatsAppCheck').checked = true;
-  document.getElementById('cancelModalSummary').textContent = `${app.customerName} — ${app.date || ''} ${app.time || ''} randevusu iptal edilecek.`;
-  document.getElementById('cancelModal').classList.add('active');
-  updateCancelButtonLabel();
-  setTimeout(() => document.getElementById('cancelReasonInput').focus(), 50);
-};
-
-function closeCancelModal() { document.getElementById('cancelModal').classList.remove('active'); }
-function updateCancelButtonLabel() {
-  const btn = document.getElementById('btnConfirmCancel');
-  const notify = document.getElementById('cancelWhatsAppCheck').checked;
-  if (btn) btn.textContent = notify ? '✕ İptal Et ve WhatsApp ile Gönder' : '✕ İptal Et';
-}
-document.getElementById('cancelWhatsAppCheck').addEventListener('change', updateCancelButtonLabel);
-document.getElementById('btnCloseCancelModal').addEventListener('click', closeCancelModal);
-document.getElementById('btnConfirmCancel').addEventListener('click', async () => {
-  const id = document.getElementById('cancelAppointmentId').value;
-  const reason = document.getElementById('cancelReasonInput').value.trim();
-  const notify = document.getElementById('cancelWhatsAppCheck').checked;
-  const app = (adminData.appointments || []).find(a => a.id === id);
-  if (!id || !app) return;
-  if (!reason) { showToast('Lütfen iptal nedenini yazın.'); document.getElementById('cancelReasonInput').focus(); return; }
-  if (notify && !formatPhone(app.customerPhone)) { showToast('Müşterinin geçerli bir telefon numarası yok.'); return; }
-
-  if (notify) cancelPopupWindow = window.open('about:blank', '_blank');
-  const btn = document.getElementById('btnConfirmCancel');
-  btn.disabled = true;
-  try {
-    const res = await adminFetch(`/api/appointments/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify({ status: 'iptal', cancelReason: reason, whatsappNotify: notify })
-    });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      if (cancelPopupWindow) cancelPopupWindow.close();
-      showToast(data.error || 'İptal işlemi başarısız');
-      return;
-    }
-    const updated = data.appointment || { ...app, status: 'iptal', cancelReason: reason };
-    if (cancelPopupWindow) {
-      const url = buildWhatsAppUrl(updated, 'cancel');
-      if (url) cancelPopupWindow.location.href = url; else cancelPopupWindow.close();
-      cancelPopupWindow = null;
-    }
-    closeCancelModal();
-    showToast(notify ? 'Randevu iptal edildi ve WhatsApp bildirimi açıldı.' : 'Randevu iptal edildi.');
-    await loadAdminData();
-  } catch (e) {
-    if (cancelPopupWindow) cancelPopupWindow.close();
-    if (e.message !== 'AUTH_EXPIRED') showToast('Sunucu hatası');
-  } finally { btn.disabled = false; }
-});
-document.getElementById('cancelModal').addEventListener('click', e => { if (e.target.id === 'cancelModal') closeCancelModal(); });
 
 window.deleteAppointment = async function(id) {
   if (!confirm('Bu randevuyu silmek istiyor musunuz?')) return;
   try {
-    const res = await adminFetch(`/api/appointments/${id}`, { method: 'DELETE' });
-    const data = await res.json().catch(() => ({}));
-    if (res.ok) { showToast('Randevu silindi.'); await loadAdminData(); }
-    else showToast(data.error || 'Silme işlemi başarısız');
-  } catch (e) { if (e.message !== 'AUTH_EXPIRED') showToast('Sunucu hatası'); }
+    const res = await fetch(`/api/appointments/${id}`, { method: 'DELETE', headers: getAdminHeaders() });
+    if (res.ok) { showToast('Silindi.'); loadAdminData(); }
+  } catch (e) { showToast('Hata'); }
 };
-
-
 
 // --- HATIRLATMALAR ---
 function renderReminders() {
@@ -409,7 +328,7 @@ function renderReminders() {
 
 window.clearReminder = async function(id) {
   try {
-    const res = await adminFetch('/api/reminders/clear', {
+    const res = await fetch('/api/reminders/clear', {
       method: 'POST', headers: getAdminHeaders(),
       body: JSON.stringify({ id })
     });
@@ -707,7 +626,7 @@ document.getElementById('settingsForm').addEventListener('submit', async e => {
     pin: document.getElementById('settingPin').value.trim() || '0000'
   };
   try {
-    const res = await adminFetch('/api/shop', { method: 'POST', headers: getAdminHeaders(), body: JSON.stringify(payload) });
+    const res = await fetch('/api/shop', { method: 'POST', headers: getAdminHeaders(), body: JSON.stringify(payload) });
     if (res.ok) { showToast('Ayarlar kaydedildi!'); loadAdminData(); }
   } catch (e) { showToast('Hata'); }
 });

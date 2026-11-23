@@ -393,6 +393,9 @@
     if (superToken) {
       loadDashboard();
     }
+    superPinInput.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') btnLogin.click();
+    });
 
     btnLogin.addEventListener('click', async () => {
       const pin = superPinInput.value.trim();
@@ -474,6 +477,7 @@
           loginView.style.display = 'block';
           return;
         }
+        if (!res.ok) throw new Error('Panel verisi alınamadı (HTTP ' + res.status + ')');
         const data = await res.json();
         loginView.style.display = 'none';
         dashboardView.style.display = 'block';
@@ -533,6 +537,7 @@
 
       } catch (e) {
         console.error(e);
+        alert(e.message || 'Süper Patron paneline bağlanılamadı.');
       }
     }
 

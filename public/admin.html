@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Berber Yönetim Paneli</title>
-  <link rel="stylesheet" href="styles.css?v=20261123b">
+  <link rel="stylesheet" href="styles.css">
   <link rel="icon" href="/logo_square.svg">
   <style>
     .admin-body { max-width: 800px; width: 100%; padding-bottom: 40px; }
@@ -39,7 +39,6 @@
     .btn-action-red { background:rgba(239,68,68,0.15); border-color:rgba(239,68,68,0.4); color:var(--red); }
     .pin-overlay { position:fixed; inset:0; background:rgba(8,10,16,0.92); backdrop-filter:blur(10px); display:flex; align-items:center; justify-content:center; z-index:999; padding:16px; }
     .pin-box { background:linear-gradient(145deg, #161c2a, #0f1420); border:1.5px solid var(--gold); border-radius:var(--radius-lg); padding:36px 30px; width:100%; max-width:380px; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.8), 0 0 25px rgba(212,175,55,0.18); }
-
   </style>
 </head>
 <body>
@@ -272,26 +271,7 @@
     </div>
   </div>
 
-  <!-- İPTAL + WHATSAPP MODALI -->
-  <div id="cancelModal" class="modal-backdrop">
-    <div class="action-modal">
-      <h3>✕ Randevuyu İptal Et</h3>
-      <p class="modal-sub" id="cancelModalSummary">Randevuyu iptal etmek için nedeni yazın. İsterseniz müşteriye WhatsApp üzerinden bildirin.</p>
-      <input type="hidden" id="cancelAppointmentId">
-      <div class="form-group">
-        <label class="form-label">İptal nedeni</label>
-        <textarea id="cancelReasonInput" class="form-input" rows="4" maxlength="500" placeholder="Örn: Ustanın acil işi çıktığı için randevunuzu iptal etmek zorunda kaldık."></textarea>
-      </div>
-      <label class="wa-check">
-        <input type="checkbox" id="cancelWhatsAppCheck" checked>
-        <span><strong>WhatsApp ile müşteriye bildir</strong></span>
-      </label>
-      <div class="modal-actions">
-        <button id="btnCloseCancelModal" class="btn-action">Vazgeç</button>
-        <button id="btnConfirmCancel" class="btn-action btn-action-red">✕ İptal Et ve WhatsApp ile Gönder</button>
-      </div>
-    </div>
-  </div>
-
+  <div id="toast" class="toast"></div>
+  <script src="admin.js"></script>
 </body>
 </html>
