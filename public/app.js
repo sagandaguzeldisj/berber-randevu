@@ -519,6 +519,7 @@ async function loadCustomerHistory() {
           <div style="color:var(--text-secondary); font-size:12px;">
             ${app.services.map(s => s.name).join(', ')} — <strong style="color:var(--gold);">${app.totalPrice} ₺</strong>
           </div>
+          ${app.status === 'iptal' && app.cancelReason ? `<div style="margin-top:6px;color:var(--red);font-size:11px;">❗ İptal nedeni: ${app.cancelReason}</div>` : ''}
         </div>`;
     }).join('');
   } catch (e) {}

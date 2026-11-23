@@ -132,6 +132,7 @@ async function loadAdminData() {
     } catch (err) {}
 
     renderHeader();
+    renderDashboard();
     renderAppointments();
     renderReminders();
     renderAdminServices();
@@ -186,6 +187,61 @@ document.getElementById('filterToday').addEventListener('click', e => setFilter(
 document.getElementById('filterPending').addEventListener('click', e => setFilter('pending', e.target));
 
 // --- RANDEVULAR ---
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch]));
+}
+
+function formatPhone(phone) {
+  const digits = String(phone || '').replace(/\D/g, '');
+  if (!digits) return '';
+  return digits.startsWith('90') ? digits : '90' + digits.replace(/^0/, '');
+}
+
+function buildWhatsAppUrl(app, type = 'confirm') {
+  const phone = formatPhone(app.customerPhone);
+  if (!phone) return null;
+  const [y,m,d] = (app.date || '').split('-');
+  const dateStr = [d,m,y].filter(Boolean).join('.');
+  const services = (app.services || []).map(s => s.name).join(', ');
+  let text = '';
+  if (type === 'cancel') {
+    text = `Merhaba ${app.customerName}! 👋\n\n💈 ${adminData.shop.name || 'Berber'} randevunuz iptal edilmiştir.\n\n📅 Tarih: ${dateStr}\n⏰ Saat: ${app.time || '-'}\n👨‍🦱 Usta: ${app.barberName || '-'}\n✂️ Hizmet: ${services || '-'}\n\n❗ İptal nedeni: ${app.cancelReason || 'İşletme kaynaklı bir değişiklik nedeniyle.'}\n\nYaşanan durum için özür diler, anlayışınız için teşekkür ederiz. Yeni bir randevu oluşturmak isterseniz size yardımcı olmaktan memnuniyet duyarız. 🙏`;
+  } else {
+    text = `Merhaba ${app.customerName}! 👋\n\n💈 ${adminData.shop.name || 'Berber'} randevunuz ONAYLANMIŞTIR ✅\n\n📅 Tarih: ${dateStr}\n⏰ Saat: ${app.time}\n👨‍🦱 Usta: ${app.barberName}\n✂️ Hizmet: ${services}\n💵 Tutar: ${app.totalPrice} ₺\n\nSizi ağırlamaktan mutluluk duyarız!`;
+  }
+  return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
+}
+
+function renderDashboard() {
+  const apps = [...(adminData.appointments || [])];
+  const now = new Date();
+  const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+  const today = apps.filter(a => a.date === todayStr);
+  const activeToday = today.filter(a => a.status !== 'iptal');
+  const revenue = activeToday.reduce((sum, a) => sum + (Number(a.totalPrice) || 0), 0);
+  const pending = apps.filter(a => a.status === 'beklemede').length;
+  const cancelled = today.filter(a => a.status === 'iptal').length;
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  set('dashTodayCount', activeToday.length);
+  set('dashTodayRevenue', `${revenue.toLocaleString('tr-TR')} ₺`);
+  set('dashPendingCount', pending);
+  set('dashCancelledCount', cancelled);
+
+  const timeline = document.getElementById('todayTimeline');
+  if (!timeline) return;
+  const ordered = today.filter(a => a.status !== 'iptal').sort((a,b) => String(a.time).localeCompare(String(b.time)));
+  if (!ordered.length) {
+    timeline.innerHTML = `<div style="text-align:center;color:var(--text-muted);padding:18px 8px;font-size:12px;">Bugün için aktif randevu yok.</div>`;
+    return;
+  }
+  timeline.innerHTML = `<div style="font-size:12px;font-weight:800;margin-bottom:4px;color:var(--text-secondary);">BUGÜNÜN AKIŞI</div>` + ordered.map(a => `
+    <div class="today-item">
+      <div class="today-time">${escapeHtml(a.time)}</div>
+      <div><div class="today-name">${escapeHtml(a.customerName)}</div><div class="today-meta">${escapeHtml(a.barberName)} • ${(a.services||[]).map(s=>escapeHtml(s.name)).join(', ')}</div></div>
+      <div class="today-status"><span class="app-badge badge-${escapeHtml(a.status || 'beklemede')}">${escapeHtml(a.status || 'beklemede')}</span></div>
+    </div>`).join('');
+}
+
 function renderAppointments() {
   appointmentsList.innerHTML = '';
   const now = new Date();
@@ -197,65 +253,109 @@ function renderAppointments() {
 
   if (apps.length === 0) {
     let emptyMsg = 'Henüz kayıtlı randevu bulunmuyor.';
-    if (currentFilter === 'today') {
-      emptyMsg = 'Bugün için randevu yok. Gelecek randevuları görmek için yukarıdaki "Tümü" veya "Bekleyenler" butonuna tıklayabilirsiniz.';
-    } else if (currentFilter === 'pending') {
-      emptyMsg = 'Onay bekleyen randevu yok.';
-    }
-    appointmentsList.innerHTML = `<div style="text-align:center;padding:40px 20px;color:var(--text-secondary);background:var(--bg-card);border-radius:var(--radius-md);border:1px solid var(--border-color);line-height:1.6;">
-      <div style="font-size:36px;margin-bottom:10px;">📅</div><p style="font-size:15px;font-weight:600;color:#fff;">${emptyMsg}</p></div>`;
+    if (currentFilter === 'today') emptyMsg = 'Bugün için randevu yok.';
+    else if (currentFilter === 'pending') emptyMsg = 'Onay bekleyen randevu yok.';
+    appointmentsList.innerHTML = `<div style="text-align:center;padding:40px 20px;color:var(--text-secondary);background:var(--bg-card);border-radius:var(--radius-md);border:1px solid var(--border-color);line-height:1.6;"><div style="font-size:36px;margin-bottom:10px;">📅</div><p style="font-size:15px;font-weight:600;color:#fff;">${emptyMsg}</p></div>`;
     return;
   }
 
+  apps.sort((a,b) => `${a.date || ''} ${a.time || ''}`.localeCompare(`${b.date || ''} ${b.time || ''}`));
   apps.forEach(app => {
     const [y,m,d] = (app.date || '').split('-');
     const dateStr = `${d}.${m}.${y}`;
-    const custPhone = (app.customerPhone || '').replace(/\D/g, '');
-    const fullPhone = custPhone.startsWith('90') ? custPhone : '90' + custPhone;
-
-    const waText = encodeURIComponent(
-      `Merhaba ${app.customerName}! 👋\n\n💈 ${adminData.shop.name || 'Gold Makas'} randevunuz ONAYLANMIŞTIR ✅\n\n📅 Tarih: ${dateStr}\n⏰ Saat: ${app.time}\n👨‍🦱 Usta: ${app.barberName}\n✂️ Hizmet: ${app.services.map(s=>s.name).join(', ')}\n💵 Tutar: ${app.totalPrice} ₺\n\nSizi ağırlamaktan mutluluk duyarız!`
-    );
-    const waUrl = `https://wa.me/${fullPhone}?text=${waText}`;
-
+    const waUrl = buildWhatsAppUrl(app, app.status === 'iptal' ? 'cancel' : 'confirm');
     const card = document.createElement('div');
     card.className = `app-card status-${app.status || 'beklemede'}`;
     card.innerHTML = `
       <div class="app-card-header">
-        <div>
-          <span class="app-customer-name">${app.customerName}</span>
-          <span style="font-size:12px;color:var(--text-muted);margin-left:6px;">(${app.id})</span>
-        </div>
-        <span class="app-badge badge-${app.status || 'beklemede'}">${app.status || 'beklemede'}</span>
+        <div><span class="app-customer-name">${escapeHtml(app.customerName)}</span><span style="font-size:12px;color:var(--text-muted);margin-left:6px;">(${escapeHtml(app.id)})</span></div>
+        <span class="app-badge badge-${escapeHtml(app.status || 'beklemede')}">${escapeHtml(app.status || 'beklemede')}</span>
       </div>
       <div class="app-details">
-        <div>📅 <strong>${dateStr} - ${app.time}</strong> (${app.totalDuration} dk)</div>
-        <div>👨‍🦱 <strong>Usta:</strong> ${app.barberName}</div>
-        <div>✂️ <strong>Hizmetler:</strong> ${app.services.map(s=>s.name).join(', ')}</div>
-        <div>💵 <strong>Tutar:</strong> <span style="color:var(--gold);font-weight:700;">${app.totalPrice} ₺</span></div>
-        <div>📞 <a href="tel:${app.customerPhone}" style="color:var(--text-primary);text-decoration:none;">${app.customerPhone}</a></div>
-        ${app.customerNote ? `<div style="color:var(--gold);margin-top:4px;">📝 "${app.customerNote}"</div>` : ''}
+        <div>📅 <strong>${escapeHtml(dateStr)} - ${escapeHtml(app.time)}</strong> (${escapeHtml(app.totalDuration)} dk)</div>
+        <div>👨‍🦱 <strong>Usta:</strong> ${escapeHtml(app.barberName)}</div>
+        <div>✂️ <strong>Hizmetler:</strong> ${(app.services||[]).map(s=>escapeHtml(s.name)).join(', ')}</div>
+        <div>💵 <strong>Tutar:</strong> <span style="color:var(--gold);font-weight:700;">${escapeHtml(app.totalPrice)} ₺</span></div>
+        <div>📞 <a href="tel:${escapeHtml(app.customerPhone)}" style="color:var(--text-primary);text-decoration:none;">${escapeHtml(app.customerPhone)}</a></div>
+        ${app.customerNote ? `<div style="color:var(--gold);margin-top:4px;">📝 "${escapeHtml(app.customerNote)}"</div>` : ''}
+        ${app.status === 'iptal' && app.cancelReason ? `<div class="cancel-reason"><strong>İptal nedeni:</strong> ${escapeHtml(app.cancelReason)}</div>` : ''}
       </div>
       <div class="app-actions">
-        ${app.status === 'beklemede' ? `<button class="btn-action btn-action-green" onclick="updateStatus('${app.id}','onaylandi')">✓ Onayla</button>` : ''}
-        <a href="${waUrl}" target="_blank" class="btn-action" style="background:#25d366;color:#fff;">💬 WhatsApp Bildir</a>
-        ${app.status !== 'tamamlandi' ? `<button class="btn-action" onclick="updateStatus('${app.id}','tamamlandi')">🏁 Tamamlandı</button>` : ''}
-        ${app.status !== 'iptal' ? `<button class="btn-action btn-action-red" onclick="updateStatus('${app.id}','iptal')">✕ İptal</button>` : ''}
-        <button class="btn-action" style="color:var(--text-muted);" onclick="deleteAppointment('${app.id}')">🗑️ Sil</button>
+        ${app.status === 'beklemede' ? `<button class="btn-action btn-action-green" onclick="updateStatus('${escapeHtml(app.id)}','onaylandi')">✓ Onayla</button>` : ''}
+        ${app.status !== 'iptal' ? `<a href="${waUrl || '#'}" target="_blank" class="btn-action" style="background:#25d366;color:#fff;">💬 WhatsApp Bildir</a>` : `<a href="${waUrl || '#'}" target="_blank" class="btn-action" style="background:#25d366;color:#fff;">💬 İptal Bildirimini Gönder</a>`}
+        ${app.status !== 'tamamlandi' && app.status !== 'iptal' ? `<button class="btn-action" onclick="updateStatus('${escapeHtml(app.id)}','tamamlandi')">🏁 Tamamlandı</button>` : ''}
+        ${app.status !== 'iptal' ? `<button class="btn-action btn-action-red" onclick="openCancelModal('${escapeHtml(app.id)}')">✕ İptal</button>` : ''}
+        <button class="btn-action" style="color:var(--text-muted);" onclick="deleteAppointment('${escapeHtml(app.id)}')">🗑️ Sil</button>
       </div>`;
     appointmentsList.appendChild(card);
   });
 }
 
 window.updateStatus = async function(id, status) {
+  if (status === 'iptal') { openCancelModal(id); return; }
   try {
     const res = await fetch(`/api/appointments/${id}`, {
       method: 'PUT', headers: getAdminHeaders(),
       body: JSON.stringify({ status })
     });
     if (res.ok) { showToast(`Durum: ${status}`); loadAdminData(); }
-  } catch (e) { showToast('Hata'); }
+    else { const data = await res.json().catch(()=>({})); showToast(data.error || 'İşlem başarısız'); }
+  } catch (e) { showToast('Sunucu hatası'); }
 };
+
+let cancelPopupWindow = null;
+window.openCancelModal = function(id) {
+  const app = (adminData.appointments || []).find(a => a.id === id);
+  if (!app) return;
+  document.getElementById('cancelAppointmentId').value = id;
+  document.getElementById('cancelReasonInput').value = '';
+  document.getElementById('cancelWhatsAppCheck').checked = true;
+  document.getElementById('cancelModalSummary').textContent = `${app.customerName} — ${app.date || ''} ${app.time || ''} randevusu iptal edilecek.`;
+  document.getElementById('cancelModal').classList.add('active');
+  setTimeout(() => document.getElementById('cancelReasonInput').focus(), 50);
+};
+
+function closeCancelModal() { document.getElementById('cancelModal').classList.remove('active'); }
+document.getElementById('btnCloseCancelModal').addEventListener('click', closeCancelModal);
+document.getElementById('btnConfirmCancel').addEventListener('click', async () => {
+  const id = document.getElementById('cancelAppointmentId').value;
+  const reason = document.getElementById('cancelReasonInput').value.trim();
+  const notify = document.getElementById('cancelWhatsAppCheck').checked;
+  const app = (adminData.appointments || []).find(a => a.id === id);
+  if (!id || !app) return;
+  if (!reason) { showToast('Lütfen iptal nedenini yazın.'); document.getElementById('cancelReasonInput').focus(); return; }
+
+  // Tarayıcı popup engelini önlemek için pencereyi kullanıcı tıklaması sırasında açıyoruz.
+  if (notify && formatPhone(app.customerPhone)) cancelPopupWindow = window.open('about:blank', '_blank');
+  const btn = document.getElementById('btnConfirmCancel');
+  btn.disabled = true;
+  try {
+    const res = await fetch(`/api/appointments/${id}`, {
+      method: 'PUT', headers: getAdminHeaders(),
+      body: JSON.stringify({ status: 'iptal', cancelReason: reason, whatsappNotify: notify })
+    });
+    const data = await res.json().catch(()=>({}));
+    if (!res.ok) {
+      if (cancelPopupWindow) cancelPopupWindow.close();
+      showToast(data.error || 'İptal işlemi başarısız');
+      return;
+    }
+    const updated = data.appointment || { ...app, status:'iptal', cancelReason:reason };
+    if (cancelPopupWindow) {
+      const url = buildWhatsAppUrl(updated, 'cancel');
+      if (url) cancelPopupWindow.location.href = url; else cancelPopupWindow.close();
+      cancelPopupWindow = null;
+    }
+    closeCancelModal();
+    showToast(notify ? 'Randevu iptal edildi. WhatsApp bildirimi açıldı.' : 'Randevu iptal edildi.');
+    loadAdminData();
+  } catch (e) {
+    if (cancelPopupWindow) cancelPopupWindow.close();
+    showToast('Sunucu hatası');
+  } finally { btn.disabled = false; }
+});
+
+document.getElementById('cancelModal').addEventListener('click', e => { if (e.target.id === 'cancelModal') closeCancelModal(); });
 
 window.deleteAppointment = async function(id) {
   if (!confirm('Bu randevuyu silmek istiyor musunuz?')) return;
@@ -264,6 +364,48 @@ window.deleteAppointment = async function(id) {
     if (res.ok) { showToast('Silindi.'); loadAdminData(); }
   } catch (e) { showToast('Hata'); }
 };
+
+
+// --- HIZLI RANDEVU ---
+function populateQuickAppointmentForm() {
+  const serviceSel = document.getElementById('quickService');
+  const barberSel = document.getElementById('quickBarber');
+  if (!serviceSel || !barberSel) return;
+  serviceSel.innerHTML = (adminData.services || []).filter(s => s.isAvailable !== false).map(s => `<option value="${escapeHtml(s.id)}">${escapeHtml(s.name)} — ${escapeHtml(s.price)} ₺ / ${escapeHtml(s.duration)} dk</option>`).join('');
+  barberSel.innerHTML = (adminData.barbers || []).map(b => `<option value="${escapeHtml(b.id)}">${escapeHtml(b.name)}</option>`).join('');
+  const now = new Date();
+  document.getElementById('quickDate').value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+}
+
+document.getElementById('btnQuickAppointment').addEventListener('click', () => {
+  populateQuickAppointmentForm();
+  document.getElementById('quickAppointmentModal').classList.add('active');
+});
+document.getElementById('btnCloseQuickModal').addEventListener('click', () => document.getElementById('quickAppointmentModal').classList.remove('active'));
+document.getElementById('quickAppointmentModal').addEventListener('click', e => { if (e.target.id === 'quickAppointmentModal') e.currentTarget.classList.remove('active'); });
+document.getElementById('quickAppointmentForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const serviceIds = [document.getElementById('quickService').value];
+  const payload = {
+    shop: currentShop,
+    customerName: document.getElementById('quickName').value.trim(),
+    customerPhone: document.getElementById('quickPhone').value.trim(),
+    customerNote: document.getElementById('quickNote').value.trim(),
+    serviceIds,
+    barberId: document.getElementById('quickBarber').value,
+    date: document.getElementById('quickDate').value,
+    time: document.getElementById('quickTime').value
+  };
+  try {
+    const res = await fetch('/api/appointments', { method:'POST', headers:getAdminHeaders(), body:JSON.stringify(payload) });
+    const data = await res.json().catch(()=>({}));
+    if (!res.ok) { showToast(data.error || 'Randevu oluşturulamadı'); return; }
+    document.getElementById('quickAppointmentForm').reset();
+    document.getElementById('quickAppointmentModal').classList.remove('active');
+    showToast('Hızlı randevu oluşturuldu.');
+    loadAdminData();
+  } catch (err) { showToast('Sunucu hatası'); }
+});
 
 // --- HATIRLATMALAR ---
 function renderReminders() {
