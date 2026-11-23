@@ -4,7 +4,7 @@ const path = require('path');
 const crypto = require('crypto');
 
 const PORT = process.env.PORT || 5001;
-const DATA_FILE = path.join(__dirname, 'data.json');
+const DATA_FILE = process.env.DATA_FILE || path.join(__dirname, 'data.json');
 const PUBLIC_DIR = path.join(__dirname, 'public');
 
 // Oturum jetonları: token -> { role: 'shop_admin'|'superadmin', shopSlug?: string }
@@ -70,10 +70,13 @@ function loadData() {
 }
 
 function saveData(data) {
+  const tempFile = DATA_FILE + '.tmp';
   try {
-    fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), 'utf-8');
+    fs.writeFileSync(tempFile, JSON.stringify(data, null, 2), 'utf-8');
+    fs.renameSync(tempFile, DATA_FILE);
     return true;
   } catch (e) {
+    try { if (fs.existsSync(tempFile)) fs.unlinkSync(tempFile); } catch (_) {}
     console.error('Veri kaydetme hatası:', e);
     return false;
   }
@@ -88,9 +91,13 @@ function getShopSlug(req, parsedUrl) {
 }
 
 function getShopData(data, slug) {
-  // Tenant izolasyonu: bulunamayan işletmeyi ASLA başka bir işletmeye yönlendirme.
   if (!data || !data.shops || !slug) return null;
-  return data.shops[String(slug).trim().toLowerCase()] || null;
+  const key = String(slug).trim().toLowerCase();
+  return Object.prototype.hasOwnProperty.call(data.shops, key) ? data.shops[key] : null;
+}
+
+function isShopActive(shopEntry) {
+  return !!shopEntry && (!shopEntry.subscription || shopEntry.subscription.status === 'active');
 }
 
 function isCancelledAppointment(app) {
@@ -98,9 +105,11 @@ function isCancelledAppointment(app) {
   return ['iptal', 'iptal edildi', 'cancelled', 'canceled', 'silindi'].includes(status);
 }
 
-function minutesOf(value) {
+function timeToMinutes(value) {
   const match = /^(\d{1,2}):(\d{2})$/.exec(String(value || ''));
-  return match ? Number(match[1]) * 60 + Number(match[2]) : NaN;
+  if (!match) return NaN;
+  const hours = Number(match[1]), minutes = Number(match[2]);
+  return hours <= 23 && minutes <= 59 ? hours * 60 + minutes : NaN;
 }
 
 function readJsonBody(req) {
@@ -135,8 +144,9 @@ function checkAdminAuth(req, targetShopSlug) {
   const session = getSession(req);
   if (!session) return false;
   if (session.role === 'superadmin') return true;
-  if (session.role === 'shop_admin') {
-    if (!targetShopSlug || session.shopSlug === targetShopSlug) return true;
+  if (session.role === 'shop_admin' && session.shopSlug === targetShopSlug) {
+    const current = getShopData(loadData(), targetShopSlug);
+    return isShopActive(current);
   }
   return false;
 }
@@ -152,6 +162,7 @@ const server = http.createServer(async (req, res) => {
   res.setHeader('X-Frame-Options', 'SAMEORIGIN');
   res.setHeader('X-XSS-Protection', '1; mode=block');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
 
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
@@ -162,6 +173,12 @@ const server = http.createServer(async (req, res) => {
   const pathname = parsedUrl.pathname;
   const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
   const targetShopSlug = getShopSlug(req, parsedUrl);
+
+  if (pathname === '/api/health' && req.method === 'GET') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ ok: true, service: 'berber-randevu' }));
+    return;
+  }
 
   // ==========================================
   // SÜPER ADMİN (PATRON) API ROTALARI
@@ -270,8 +287,12 @@ const server = http.createServer(async (req, res) => {
         res.end(JSON.stringify({ error: 'Zorunlu alanlar eksik' }));
         return;
       }
-      const cleanSlug = String(slug).trim().toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '');
-      if (!cleanSlug) { res.writeHead(400, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: 'Geçerli bir işletme kodu gerekli' })); return; }
+      const cleanSlug = String(slug).trim().toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+      if (!cleanSlug) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Geçerli bir işletme bağlantı kodu girin.' }));
+        return;
+      }
       const data = loadData();
       if (data.shops[cleanSlug]) {
         res.writeHead(400, { 'Content-Type': 'application/json' });
@@ -327,7 +348,7 @@ const server = http.createServer(async (req, res) => {
         reminders: []
       };
 
-      saveData(data);
+      if (!saveData(data)) { res.writeHead(500, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: 'Randevu kaydedilemedi. Lütfen tekrar deneyin.' })); return; }
       res.writeHead(201, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ success: true, slug: cleanSlug }));
     } catch (e) {
@@ -352,10 +373,10 @@ const server = http.createServer(async (req, res) => {
         res.writeHead(404); res.end(JSON.stringify({ error: 'Berber bulunamadı' })); return;
       }
       data.shops[slug].subscription = data.shops[slug].subscription || {};
-      data.shops[slug].subscription.status = status === 'active' ? 'active' : 'suspended';
+      data.shops[slug].subscription.status = status;
       saveData(data);
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ success: true, status: data.shops[slug].subscription.status }));
+      res.end(JSON.stringify({ success: true, status }));
     } catch (e) {
       res.writeHead(400); res.end(JSON.stringify({ error: 'Hata' }));
     }
@@ -372,7 +393,12 @@ const server = http.createServer(async (req, res) => {
     const shopEntry = getShopData(data, targetShopSlug);
     if (!shopEntry) {
       res.writeHead(404, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'Berber bulunamadı' }));
+      res.end(JSON.stringify({ error: 'Dükkan bulunamadı. Lütfen doğru işletme bağlantısını kullanın.' }));
+      return;
+    }
+    if (!isShopActive(shopEntry)) {
+      res.writeHead(403, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Bu işletme şu anda hizmet vermiyor.' }));
       return;
     }
 
@@ -414,6 +440,11 @@ const server = http.createServer(async (req, res) => {
       res.end(JSON.stringify({ error: 'Berber dükkanı bulunamadı' }));
       return;
     }
+    if (!isShopActive(shopEntry)) {
+      res.writeHead(403, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Bu işletme askıya alınmış.' }));
+      return;
+    }
 
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({
@@ -442,13 +473,18 @@ const server = http.createServer(async (req, res) => {
 
     try {
       const body = await readJsonBody(req);
-      const reqShopSlug = (body.shop || targetShopSlug).trim().toLowerCase();
+      const reqShopSlug = String(body.shop || targetShopSlug).trim().toLowerCase();
       const data = loadData();
       const shopEntry = getShopData(data, reqShopSlug);
 
       if (!shopEntry) {
         res.writeHead(404, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Dükkan bulunamadı' }));
+        res.end(JSON.stringify({ error: 'Dükkan bulunamadı. Linkteki dükkân kodunu kontrol edin.' }));
+        return;
+      }
+      if (!isShopActive(shopEntry)) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Bu işletme geçici olarak askıya alınmıştır.' }));
         return;
       }
 
@@ -484,7 +520,8 @@ const server = http.createServer(async (req, res) => {
   if (pathname === '/api/appointments' && req.method === 'GET') {
     const data = loadData();
     const shopEntry = getShopData(data, targetShopSlug);
-    if (!shopEntry) { res.writeHead(404, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: 'İşletme bulunamadı' })); return; }
+    if (!shopEntry) { res.writeHead(404, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: 'Dükkan bulunamadı' })); return; }
+    if (!isShopActive(shopEntry)) { res.writeHead(403, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: 'İşletme askıda' })); return; }
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify(shopEntry.appointments || []));
     return;
@@ -495,8 +532,7 @@ const server = http.createServer(async (req, res) => {
     const phone = decodeURIComponent(pathname.replace('/api/appointments/history/', '')).replace(/\D/g, '');
     const data = loadData();
     const shopEntry = getShopData(data, targetShopSlug);
-    if (!shopEntry) { res.writeHead(404, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: 'İşletme bulunamadı' })); return; }
-    const history = (shopEntry.appointments || [])
+    const history = ((shopEntry && shopEntry.appointments) || [])
       .filter(a => (a.customerPhone || '').replace(/\D/g, '').includes(phone))
       .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -519,7 +555,7 @@ const server = http.createServer(async (req, res) => {
 
     try {
       const body = await readJsonBody(req);
-      const reqShopSlug = (body.shop || targetShopSlug).trim().toLowerCase();
+      const reqShopSlug = String(body.shop || targetShopSlug).trim().toLowerCase();
       const { customerName, customerPhone, customerNote, serviceIds, barberId, date, time } = body;
 
       if (!customerName || !customerPhone || !date || !time || !serviceIds || serviceIds.length === 0) {
@@ -531,35 +567,42 @@ const server = http.createServer(async (req, res) => {
       const shopEntry = getShopData(data, reqShopSlug);
       if (!shopEntry) {
         res.writeHead(404, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'İşletme bulunamadı. Doğru işletme bağlantısını kontrol edin.' })); return;
+        res.end(JSON.stringify({ error: 'Dükkan bulunamadı. İşletme bağlantısını kontrol edin.' })); return;
+      }
+      if (!isShopActive(shopEntry)) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Bu işletme şu anda randevu kabul etmiyor.' })); return;
       }
 
       shopEntry.appointments = shopEntry.appointments || [];
-      const selectedServices = (shopEntry.services || []).filter(service => (serviceIds || []).map(String).includes(String(service.id)));
+
+      const selectedServices = (shopEntry.services || []).filter(s => (serviceIds || []).map(String).includes(String(s.id)));
       if (!selectedServices.length || selectedServices.length !== serviceIds.length) {
         res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Seçilen hizmet bulunamadı.' })); return;
+        res.end(JSON.stringify({ error: 'Seçilen hizmetlerden biri artık mevcut değil. Sayfayı yenileyin.' })); return;
       }
-      const totalDuration = selectedServices.reduce((sum, service) => sum + (Number(service.duration) || 0), 0);
-      const requestedStart = minutesOf(time);
-      const requestedEnd = requestedStart + Math.max(totalDuration, 1);
-      const requestedBarber = String(barberId || 'any');
+      const startMinutes = timeToMinutes(time);
+      const requestedDuration = selectedServices.reduce((sum, service) => sum + (Number(service.duration) || 0), 0) || 30;
+      if (!Number.isFinite(startMinutes) || startMinutes + requestedDuration > 24 * 60) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Geçersiz randevu saati veya süresi.' })); return;
+      }
       const conflict = shopEntry.appointments.some(app => {
         if (isCancelledAppointment(app) || app.date !== date) return false;
-        const existingStart = minutesOf(app.time);
+        if (!(String(app.barberId) === String(barberId) || barberId === 'any' || app.barberId === 'any')) return false;
+        const existingStart = timeToMinutes(app.time);
         const existingDuration = Number(app.totalDuration) ||
           (Array.isArray(app.services) ? app.services.reduce((sum, service) => sum + (Number(service.duration) || 0), 0) : 0) || 30;
-        const existingEnd = existingStart + existingDuration;
-        const existingBarber = String(app.barberId || 'any');
-        const sameBarber = existingBarber === requestedBarber || requestedBarber === 'any' || existingBarber === 'any';
-        return sameBarber && Number.isFinite(requestedStart) && Number.isFinite(existingStart) && requestedStart < existingEnd && existingStart < requestedEnd;
+        if (!Number.isFinite(existingStart)) return false;
+        return startMinutes < existingStart + existingDuration && existingStart < startMinutes + requestedDuration;
       });
       if (conflict) {
         res.writeHead(409, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Bu usta seçilen saat aralığında dolu. Lütfen başka saat seçiniz.' })); return;
+        res.end(JSON.stringify({ error: 'Bu saat aralığı dolu. Lütfen başka saat seçiniz.' })); return;
       }
 
-      const totalPrice = selectedServices.reduce((sum, service) => sum + (Number(service.price) || 0), 0);
+      const totalPrice = selectedServices.reduce((s, x) => s + (Number(x.price) || 0), 0);
+      const totalDuration = selectedServices.reduce((s, x) => s + (Number(x.duration) || 0), 0);
       const selectedBarber = (shopEntry.barbers || []).find(b => b.id === barberId) || { id: 'any', name: 'Farketmez' };
 
       const app = {

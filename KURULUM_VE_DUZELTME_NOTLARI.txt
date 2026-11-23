@@ -1,0 +1,22 @@
+BERBER RANDEVU - GÜNCELLEME NOTLARI
+
+1) ZIP içeriğinin tamamını GitHub deposunun köküne yükleyin (berber-randevu klasörünün içindeki dosyalar).
+2) Render deploy tamamlandıktan sonra /api/health adresini açın. {"ok":true} yanıtı sunucunun ayakta olduğunu gösterir.
+3) Müşteri linkleri mutlaka ?shop=DUKKAN_SLUG parametresi taşımalıdır.
+4) Süper Patron PIN'i data.json içindeki superAdmin.pin değeridir (bu dosyada 1923).
+5) Bu ZIP'teki mevcut işletme PIN'leri: Gold Makas 0000, Tarz Barber 1234. Yeni işletme PIN'i ekleme sırasında belirlenir.
+6) Gold Makas ve Tarz Barber kayıtları bu ZIP'te subscription.status=active durumundadır. Askıya alma durumu Süper Patron panelinden yeniden ayarlanmalıdır.
+7) Bu ZIP'in data.json dosyasında yalnızca gold-makas ve tarz-barber vardır. Canlı sistemdeki üçüncü işletmenin kaydı bu yedekte bulunmadığından, adı/PIN'i/hizmetleri/randevuları bilinmeden yeniden oluşturulamaz. Canlı veriyi kaybetmemek için mevcut Render data.json yedeğini almadan deploy etmeyin.
+
+ÖNEMLİ - RENDER VERİ KALICILIĞI:
+Uygulama JSON dosyasına yazar. Render servisinin dosya sistemi kalıcı değilse, yeni işletme ve randevular yeniden başlatma/deploy sonrasında kaybolabilir. Kalıcı disk kullanıyorsanız Render'da mount path'i /var/data yapın ve Environment bölümüne DATA_FILE=/var/data/data.json ekleyin. Kalıcı disk yoksa deploy öncesi data.json yedeği alın; kalıcı veri için PostgreSQL/Supabase entegrasyonu ayrıca kurulmalıdır.
+
+DÜZELTİLENLER:
+- Bilinmeyen shop slug artık başka işletmeye (Gold Makas/ilk kayıt) yönlendirilmez; 404 döner.
+- Askıya alınan işletmeler müşteri sayfasından ve panel girişinden engellenir.
+- Randevu çakışması yalnızca aynı işletme/personel için kontrol edilir; iptal edilmiş kayıtlar blokaj oluşturmaz ve süre çakışmaları dikkate alınır.
+- Randevu ID'leri benzersiz UUID tabanlıdır.
+- JSON yazımı geçici dosya + atomik rename ile yapılır.
+- Yönetim paneli oturumu sunucu yeniden başladığında geçersizleşirse PIN ekranına geri döner.
+- Süper Patron PIN alanında Enter ile giriş desteklenir.
+- Müşteri ekranı sunucu hatasının gerçek açıklamasını gösterir.

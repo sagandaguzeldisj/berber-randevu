@@ -11,7 +11,7 @@ Mahalle berberi ve kuaförlerinin Fresha / Treatwell gibi platformlara komisyon 
 
 ## 🛠️ Teknoloji ve Mimari
 * **Sunucu:** Saf Node.js (`http`, `fs`, `path`). Sıfır harici paket bağımlılığı!
-* **Veritabanı:** `data.json` (Gerektiğinde Supabase/PostgreSQL'e taşınabilir REST API mimarisi kuruldu)
+* **Veri saklama:** `data.json` (yerel kullanım); Render üzerinde kalıcı veri için `DATA_FILE` ortam değişkenini kalıcı diskteki dosyaya yönlendirin. Ücretsiz/ephemeral dosya sistemi yeniden başlatma veya deploy sırasında veriyi kaybedebilir.
 * **Müşteri Arayüzü:** `public/index.html` + `public/styles.css` + `public/app.js`
   - 5 adımlı mobil randevu akışı (Hizmet → Berber → Tarih → Saat → Bilgiler)
   - 7 günlük dinamik takvim
